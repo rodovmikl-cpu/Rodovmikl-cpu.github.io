@@ -19,8 +19,10 @@ let savedCode = "";
 function register() {
   const nickname = document.getElementById("nickname").value.trim();
   if (!nickname) return alert("אנא הכנס שם משתמש");
+
   const code = Math.floor(100000000 + Math.random() * 900000000).toString();
-  savedName = nickname; savedCode = code;
+  savedName = nickname;
+  savedCode = code;
 
   db.ref('users/' + code).set({ name: nickname });
   document.getElementById("generatedCode").innerText = code;
@@ -28,19 +30,98 @@ function register() {
   document.getElementById("regMessage").innerText = "נרשמת בהצלחה — שמור את הקוד!";
 }
 
+// кнопка “העתק קוד”
+document.addEventListener("DOMContentLoaded", () => {
+  const btn = document.getElementById("copyCodeBtn");
+  if (btn) btn.onclick = () => {
+    const code = savedCode || document.getElementById("generatedCode").innerText;
+    navigator.clipboard.writeText(code);
+    alert("הקוד הועתק");
+  };
+
+  const t = document.getElementById("togglePostBox");
+  if (t) t.onclick = () => {
+    const b = document.getElementById("postBox");
+    b.style.display = (b.style.display === "block") ? "none" : "block";
+  };
+});
+
 // ===== Вход =====
 function login() {
   const loginCode = document.getElementById("loginCode").value.trim();
+  if (!loginCode) return;
+
   if (loginCode === "admin" || loginCode === "michaelrodov") {
-    savedName = savedCode = loginCode;
-    enterUser(true); return;
+    savedName = loginCode;
+    savedCode = loginCode;
+    enterUser(true);
+    return;
   }
+
   db.ref('users/' + loginCode).once('value', snap => {
-    if (snap.exists()) { savedName = snap.val().name; savedCode = loginCode; enterUser(false); }
-    else alert("קוד שגוי!");
+    if (snap.exists()) {
+      savedName = snap.val().name;
+      savedCode = loginCode;
+      enterUser(false);
+    } else {
+      alert("קוד שגוי!");
+    }
   });
 }
 
-// ===== Главная страница =====
+// ===== Переход на экран логина после регистрации =====
+function continueToLogin() {
+  document.getElementById("registerBox").style.display = "none";
+  document.getElementById("loginBox").style.display = "block";
+}
+
+// ===== Выход =====
+function logout() { location.reload(); }
+
+// ===== Вход пользователя / показ экранов + камера =====
 function enterUser(isAdmin) {
-  document.getElementById("registerBox").style.display
+  // показать нужные блоки
+  document.getElementById("registerBox").style.display = "none";
+  document.getElementById("loginBox").style.display = "none";
+  document.getElementById("welcomeBox").style.display = "block";
+  document.getElementById("createPost").style.display = "block";
+  document.getElementById("allPosts").style.display = "block";
+  document.getElementById("adminPanel").style.display = isAdmin ? "block" : "none";
+
+  document.getElementById("welcomeText").innerText = "שלום, " + savedName + "!";
+
+  // камера (работает только по HTTPS — у тебя GitHub Pages как раз HTTPS)
+  const video = document.getElementById("camera");
+  if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then(stream => { video.srcObject = stream; })
+      .catch(() => { video.replaceWith(document.createTextNode("אין הרשאת מצלמה")); });
+  }
+}
+
+// ===== Публикация поста =====
+function savePost() {
+  const desc = document.getElementById("description").value.trim();
+  const price = Number(document.getElementById("price").value || 0);
+  if (!desc && !price) return;
+
+  const post = { by: savedName, desc, price, ts: Date.now() };
+  db.ref('posts').push(post);
+  document.getElementById("description").value = "";
+  document.getElementById("price").value = "";
+  alert("פורסם!");
+}
+
+// ===== Загрузка списка постов =====
+db.ref('posts').on('value', snap => {
+  const list = document.getElementById('postsList');
+  if (!list) return;
+  list.innerHTML = "";
+  snap.forEach(ch => {
+    const p = ch.val();
+    const div = document.createElement('div');
+    div.className = 'post';
+    div.innerHTML = <b>${p.by || "מישהו"}</b> — ₪${p.price || 0}<br>${p.desc || ""};
+    list.appendChild(div);
+  });
+});
