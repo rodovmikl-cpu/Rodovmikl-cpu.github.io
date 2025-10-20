@@ -1,115 +1,262 @@
-// ===== Firebase config =====
-const firebaseConfig = {
-  apiKey: "AIzaSyBvvebig_d426cyfqzhmUdYm1xeos1qI3g",
-  authDomain: "schooltrade-24d67.firebaseapp.com",
-  projectId: "schooltrade-24d67",
-  storageBucket: "schooltrade-24d67.appspot.com",
-  messagingSenderId: "810785338793",
-  appId: "1:810785338793:web:c0e430982daf74351300b8",
-  measurementId: "G-F1Q46581JN"
-};
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
+// ====== данные ======
+let users = JSON.parse(localStorage.getItem("users") || "{}");
+let posts = JSON.parse(localStorage.getItem("posts") || "[]");
 
-// ===== Variables =====
-let savedName = "";
 let savedCode = "";
+let savedName = "";
 
-// ===== Генератор кода =====
-function makeCode() {
-  return Math.floor(100000000 + Math.random() * 900000000).toString();
+function saveData() {
+  localStorage.setItem("users", JSON.stringify(users));
+  localStorage.setItem("posts", JSON.stringify(posts));
 }
 
-// ===== Регистрация =====
 function register() {
   const nickname = document.getElementById("nickname").value.trim();
-  if (!nickname) return alert("אנא הכנס שם משתמש");
-  savedName = nickname;
-  savedCode = makeCode();
+  if (!nickname) {
+    document.getElementById("regMessage").innerText = "אנא הכנס שם משתמש";
+    return;
+  }
 
-  document.getElementById("generatedCode").innerText = savedCode;
+  let code;
+  do {
+    code = Math.floor(100000000 + Math.random() * 900000000).toString();
+  } while (users[code]);
+
+  users[code] = { name: nickname };
+  saveData();
+
+  savedName = nickname;
+  savedCode = code;
+
+  document.getElementById("generatedCode").innerText = code;
   document.getElementById("showCodeBox").style.display = "block";
   document.getElementById("regMessage").innerText = "נרשמת בהצלחה — שמור את הקוד!";
-
-  db.ref('users/' + savedCode).set({ name: nickname });
 }
 
-// ===== Новый код =====
-function newCode() {
-  savedCode = makeCode();
-  document.getElementById("generatedCode").innerText = savedCode;
-  db.ref('users/' + savedCode).set({ name: savedName });
-}
-
-// ===== Продолжить к логину =====
 function continueToLogin() {
   document.getElementById("registerBox").style.display = "none";
   document.getElementById("loginBox").style.display = "block";
 }
 
-// ===== Вход =====
 function login() {
-  const loginCode = document.getElementById("loginCode").value.trim().toLowerCase();
-  if (!loginCode) return alert("הכנס קוד");
+  const loginCode = document.getElementById("loginCode").value.trim();
+  document.getElementById("logMessage").innerText = "";
 
   if (loginCode === "admin" || loginCode === "michaelrodov") {
+    savedCode = loginCode;
+    savedName = loginCode;
     enterUser(true);
+    return;
+  }
+
+  if (users[loginCode]) {
+    savedCode = loginCode;
+    savedName = users[loginCode].name;
+    enterUser(false);
   } else {
-    db.ref('users/' + loginCode).once('value', snap => {
-      if (snap.exists()) {
-        savedName = snap.val().name;
-        enterUser(false);
-      } else {
-        alert("קוד שגוי!");
-      }
-    });
+    document.getElementById("logMessage").innerText = "קוד שגוי!";
   }
 }
 
-// ===== Выход =====
-function logout() { location.reload(); }
-
-// ===== Вход в систему =====
 function enterUser(isAdmin) {
-  document.getElementById("registerBox").style.display = "none";
   document.getElementById("loginBox").style.display = "none";
   document.getElementById("welcomeBox").style.display = "block";
-  document.getElementById("createPost").style.display = "block";
   document.getElementById("allPosts").style.display = "block";
+  document.getElementById("createPost").style.display = isAdmin ? "none" : "block";
+  document.getElementById("welcomeText").innerText = "ברוך הבא, " + savedName + "!";
   document.getElementById("adminPanel").style.display = isAdmin ? "block" : "none";
 
-  document.getElementById("welcomeText").innerText = "שלום, " + savedName + "!";
+  if (!isAdmin) startCamera();
+  showPosts();
+  if (isAdmin) showUsersList();
 }
 
-// ===== Сохранить пост =====
-function savePost() {
-  const desc = document.getElementById("description").value.trim();
-  const price = Number(document.getElementById("price").value || 0);
-  if (!desc && !price) return;
+function logout() {
+  document.getElementById("welcomeBox").style.display = "none";
+  document.getElementById("registerBox").style.display = "block";
+  document.getElementById("nickname").value = "";
+  document.getElementById("showCodeBox").style.display = "none";
+  document.getElementById("loginCode").value = "";
+  document.getElementById("allPosts").style.display = "none";
+  document.getElementById("createPost").style.display = "none";
+  document.getElementById("adminPanel").style.display = "none";
+  savedCode = "";
+  savedName = "";
+}
 
-  db.ref('posts').push({ by: savedName, desc, price, ts: Date.now() });
+function startCamera() {
+  const video = document.getElementById('camera');
+  const canvas = document.getElementById('photo');
+  const preview = document.getElementById('preview');
+  const captureButton = document.getElementById('capture');
+
+  if (captureButton._listenerAdded) return;
+  captureButton._listenerAdded = true;
+
+  navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+    .then(stream => { video.srcObject = stream; })
+    .catch(err => console.warn('שגיאה במצלמה:', err));
+
+  captureButton.addEventListener('click', () => {
+    const ctx = canvas.getContext('2d');
+    if (!video.videoWidth) {
+      alert("המתן לטעינה");
+      return;
+    }
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    preview.src = canvas.toDataURL('image/png');
+    preview.style.display = 'block';
+  });
+}
+
+function savePost() {
+  if (!savedCode || savedCode === "admin" || savedCode === "michaelrodov") {
+    alert("רק משתמשים רגילים יכולים לפרסם");
+    return;
+  }
+
+  const photo = document.getElementById("preview").src;
+  const desc = document.getElementById("description").value.trim();
+  const price = document.getElementById("price").value.trim();
+
+  if (!photo || !desc) {
+    alert("צריך תיאור ותמונה!");
+    return;
+  }
+
+  const newPost = {
+    id: Date.now() + "_" + Math.random().toString(36).slice(2),
+    ownerCode: savedCode,
+    name: savedName,
+    desc: desc,
+    price: price,
+    photo: photo,
+    date: new Date().toLocaleString(),
+    comments: []
+  };
+
+  posts.push(newPost);
+  saveData();
+  showPosts();
   document.getElementById("description").value = "";
   document.getElementById("price").value = "";
-  alert("פורסם!");
 }
 
-// ===== Список постов =====
-db.ref('posts').on('value', snap => {
-  const list = document.getElementById('postsList');
-  list.innerHTML = "";
-  snap.forEach(ch => {
-    const p = ch.val();
-    const div = document.createElement('div');
-    div.className = 'post';
-    div.innerHTML = <b>${p.by || "מישהו"}</b> — ₪${p.price || 0}<br>${p.desc || ""};
-    list.appendChild(div);
+function showPosts() {
+  const container = document.getElementById("postsList");
+  container.innerHTML = "";
+
+  posts.slice().reverse().forEach(p => {
+    const isAdmin = (savedCode === "admin" || savedCode === "michaelrodov");
+    const canDelete = isAdmin || (p.ownerCode === savedCode);
+    const deleteBtn = canDelete ? <div class="admin-delete" onclick="deletePost('${p.id}')">❌ מחק</div> : "";
+
+    let commentsHTML = "";
+    p.comments.forEach(c => {
+      commentsHTML += <div class="comment"><b>${c.name}:</b> ${c.text}</div>;
+    });
+
+    const postHTML = `
+      <div class="post">
+        <img src="${p.photo}">
+        <h4>${p.name}</h4>
+        <p>${p.desc}</p>
+        <p>💰 ${p.price ? p.price + " ₪" : "ללא מחיר"}</p>
+        <small>${p.date}</small>
+        ${deleteBtn}
+        <div class="comment-section">
+          ${commentsHTML}
+          <div class="comment-input">
+            <input type="text" placeholder="הוסף תגובה..." id="cmt-${p.id}">
+            <button onclick="addComment('${p.id}')">💬 שלח</button>
+          </div>
+        </div>
+      </div>
+    `;
+    container.innerHTML += postHTML;
   });
-});
-
-// ===== Удаление всех постов (админ) =====
-function clearAll() {
-  if (confirm("האם אתה בטוח שברצונך למחוק את כל הפוסטים?")) {
-    db.ref('posts').remove();
-    alert("כל הפוסטים נמחקו");
-  }
 }
+
+function addComment(postId) {
+  const input = document.getElementById(cmt-${postId});
+  const text = input.value.trim();
+  if (!text) return;
+  const post = posts.find(p => p.id === postId);
+  post.comments.push({ name: savedName, text });
+  saveData();
+  input.value = "";
+  showPosts();
+}
+
+function deletePost(id) {
+  if (!confirm("למחוק פוסט זה?")) return;
+  posts = posts.filter(p => p.id !== id);
+  saveData();
+  showPosts();
+}
+
+function showUsersList() {
+  const c = document.getElementById("usersList");
+  c.innerHTML = "";
+  for (const code in users) {
+    const u = users[code];
+    c.innerHTML += `<div class="user-row">
+      <span>${u.name} (${code})</span>
+      <button class="user-delete" onclick="deleteAccount('${code}')">מחק</button>
+    </div>`;
+  }
+}
+
+function deleteAccount(code) {
+  delete users[code];
+  posts = posts.filter(p => p.ownerCode !== code);
+  saveData();
+  showUsersList();
+  showPosts();
+}
+
+function clearAll() {
+  if (!confirm("למחוק את כל הפוסטים?")) return;
+  posts = [];
+  saveData();
+  showPosts();
+}
+
+// ====== копирование кода (כפתור העתק קוד) ======
+function copyGeneratedCodeToClipboard() {
+  const codeEl = document.getElementById('generatedCode');
+  if (!codeEl) return;
+  const text = codeEl.innerText || codeEl.textContent;
+  if (!text) return;
+  navigator.clipboard.writeText(text).then(() => {
+    const msg = document.getElementById('regMessage');
+    if (msg) {
+      msg.innerText = "הקוד הועתק!";
+      setTimeout(() => msg.innerText = "נרשמת בהצלחה — שמור את הקוד!", 1800);
+    }
+  }).catch(err => {
+    alert('לא יכול להעתיק — בדוק הרשאות הדפדפן.');
+    console.error(err);
+  });
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("registerBox").style.display = "block";
+  showPosts();
+
+  const toggleBtn = document.getElementById('togglePostBox');
+  const postBox = document.getElementById('postBox');
+  if (toggleBtn) {
+    toggleBtn.addEventListener('click', () => {
+      postBox.style.display = postBox.style.display === 'none' ? 'block' : 'none';
+    });
+  }
+
+  // добавляем обработчик для иврит-кнопки "העתק קוד"
+  const copyBtn = document.getElementById('copyCodeBtn');
+  if (copyBtn) {
+    copyBtn.addEventListener('click', copyGeneratedCodeToClipboard);
+  }
+});
