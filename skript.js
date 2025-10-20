@@ -1,262 +1,197 @@
-// ====== данные ======
-let users = JSON.parse(localStorage.getItem("users") || "{}");
-let posts = JSON.parse(localStorage.getItem("posts") || "[]");
+// ------------------ Base helpers ------------------
+const q = id => document.getElementById(id);
+const dbg = txt => { const d = q('dbg'); if (d) d.textContent = txt; };
+console.log('JS LOADED v10');
+window.addEventListener('error', e => console.error('JS ERROR:', e.message));
 
-let savedCode = "";
+// ------------------ Firebase config ------------------
+const firebaseConfig = {
+  apiKey: "AIzaSyBvvebig_d426cyfqzhmUdYm1xeos1qI3g",
+  authDomain: "schooltrade-24d67.firebaseapp.com",
+  databaseURL: "https://schooltrade-24d67-default-rtdb.firebaseio.com",
+  projectId: "schooltrade-24d67",
+  storageBucket: "schooltrade-24d67.appspot.com",
+  messagingSenderId: "810785338793",
+  appId: "1:810785338793:web:c0e430982daf74351300b8",
+  measurementId: "G-F1Q46581JN"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+// ------------------ State ------------------
 let savedName = "";
+let savedCode = "";
 
-function saveData() {
-  localStorage.setItem("users", JSON.stringify(users));
-  localStorage.setItem("posts", JSON.stringify(posts));
-}
+// ------------------ Utils ------------------
+const makeCode = () => Math.floor(100000000 + Math.random() * 900000000).toString();
 
+// ------------------ Registration ------------------
 function register() {
-  const nickname = document.getElementById("nickname").value.trim();
-  if (!nickname) {
-    document.getElementById("regMessage").innerText = "אנא הכנס שם משתמש";
-    return;
-  }
-
-  let code;
-  do {
-    code = Math.floor(100000000 + Math.random() * 900000000).toString();
-  } while (users[code]);
-
-  users[code] = { name: nickname };
-  saveData();
+  const nickname = (q('nickname').value || '').trim();
+  if (!nickname) return alert('אנא הכנס שם משתמש');
 
   savedName = nickname;
-  savedCode = code;
+  savedCode = makeCode();
 
-  document.getElementById("generatedCode").innerText = code;
-  document.getElementById("showCodeBox").style.display = "block";
-  document.getElementById("regMessage").innerText = "נרשמת בהצלחה — שמור את הקוד!";
+  // Показать пользователю сразу
+  q('generatedCode').innerText = savedCode;
+  q('showCodeBox').style.display = 'block';
+  q('regMessage').innerText = 'נרשמת בהצלחה — שמור את הקוד!';
+
+  // Записать в БД (если доступно)
+  db.ref('users/' + savedCode).set({ name: savedName }).catch(err => {
+    console.warn('Firebase write error:', err);
+  });
+}
+
+function newCode() {
+  if (!savedName) {
+    alert('קודם רשום שם ולאחר מכן צור קוד');
+    return;
+  }
+  savedCode = makeCode();
+  q('generatedCode').innerText = savedCode;
+  db.ref('users/' + savedCode).set({ name: savedName }).catch(()=>{});
 }
 
 function continueToLogin() {
-  document.getElementById("registerBox").style.display = "none";
-  document.getElementById("loginBox").style.display = "block";
+  q('registerBox').style.display = 'none';
+  q('loginBox').style.display = 'block';
 }
 
+// ------------------ Login ------------------
 function login() {
-  const loginCode = document.getElementById("loginCode").value.trim();
-  document.getElementById("logMessage").innerText = "";
+  const raw = (q('loginCode').value || '');
+  const loginCode = raw.normalize('NFKC').trim().toLowerCase();
+  if (!loginCode) return alert('הכנס קוד');
 
-  if (loginCode === "admin" || loginCode === "michaelrodov") {
-    savedCode = loginCode;
+  if (loginCode === 'admin' || loginCode === 'michaelrodov') {
     savedName = loginCode;
+    savedCode = loginCode;
     enterUser(true);
     return;
   }
 
-  if (users[loginCode]) {
-    savedCode = loginCode;
-    savedName = users[loginCode].name;
-    enterUser(false);
-  } else {
-    document.getElementById("logMessage").innerText = "קוד שגוי!";
-  }
-}
-
-function enterUser(isAdmin) {
-  document.getElementById("loginBox").style.display = "none";
-  document.getElementById("welcomeBox").style.display = "block";
-  document.getElementById("allPosts").style.display = "block";
-  document.getElementById("createPost").style.display = isAdmin ? "none" : "block";
-  document.getElementById("welcomeText").innerText = "ברוך הבא, " + savedName + "!";
-  document.getElementById("adminPanel").style.display = isAdmin ? "block" : "none";
-
-  if (!isAdmin) startCamera();
-  showPosts();
-  if (isAdmin) showUsersList();
-}
-
-function logout() {
-  document.getElementById("welcomeBox").style.display = "none";
-  document.getElementById("registerBox").style.display = "block";
-  document.getElementById("nickname").value = "";
-  document.getElementById("showCodeBox").style.display = "none";
-  document.getElementById("loginCode").value = "";
-  document.getElementById("allPosts").style.display = "none";
-  document.getElementById("createPost").style.display = "none";
-  document.getElementById("adminPanel").style.display = "none";
-  savedCode = "";
-  savedName = "";
-}
-
-function startCamera() {
-  const video = document.getElementById('camera');
-  const canvas = document.getElementById('photo');
-  const preview = document.getElementById('preview');
-  const captureButton = document.getElementById('capture');
-
-  if (captureButton._listenerAdded) return;
-  captureButton._listenerAdded = true;
-
-  navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
-    .then(stream => { video.srcObject = stream; })
-    .catch(err => console.warn('שגיאה במצלמה:', err));
-
-  captureButton.addEventListener('click', () => {
-    const ctx = canvas.getContext('2d');
-    if (!video.videoWidth) {
-      alert("המתן לטעינה");
-      return;
+  db.ref('users/' + loginCode).once('value', snap => {
+    if (snap.exists()) {
+      savedName = (snap.val() && snap.val().name) || 'משתמש';
+      savedCode = loginCode;
+      enterUser(false);
+    } else {
+      alert('קוד שגוי!');
     }
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    preview.src = canvas.toDataURL('image/png');
-    preview.style.display = 'block';
+  }).catch(err => {
+    console.error('Login read error:', err);
+    alert('שגיאה בקריאה מהשרת');
   });
 }
 
+function logout() { location.reload(); }
+
+// ------------------ Enter app ------------------
+function enterUser(isAdmin) {
+  q('registerBox').style.display = 'none';
+  q('loginBox').style.display = 'none';
+  q('welcomeBox').style.display = 'block';
+  q('createPost').style.display = 'block';
+  q('allPosts').style.display = 'block';
+  q('adminPanel').style.display = isAdmin ? 'block' : 'none';
+
+  q('welcomeText').innerText = 'שלום, ' + savedName + '!';
+  dbg(user: ${savedName} | admin: ${isAdmin});
+
+  // Камера (работает только по HTTPS — GitHub Pages ок)
+  const video = q('camera');
+  if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then(stream => { video.srcObject = stream; })
+      .catch(() => { video.replaceWith(document.createTextNode('אין הרשאת מצלמה')); });
+  }
+
+  // Загрузить список пользователей (для админа)
+  loadUsers();
+}
+
+// ------------------ Posts ------------------
 function savePost() {
-  if (!savedCode || savedCode === "admin" || savedCode === "michaelrodov") {
-    alert("רק משתמשים רגילים יכולים לפרסם");
-    return;
-  }
+  if (!savedName) return alert('יש להתחבר');
+  const desc = (q('description').value || '').trim();
+  const price = Number(q('price').value || 0);
+  if (!desc && !price) return;
 
-  const photo = document.getElementById("preview").src;
-  const desc = document.getElementById("description").value.trim();
-  const price = document.getElementById("price").value.trim();
-
-  if (!photo || !desc) {
-    alert("צריך תיאור ותמונה!");
-    return;
-  }
-
-  const newPost = {
-    id: Date.now() + "_" + Math.random().toString(36).slice(2),
-    ownerCode: savedCode,
-    name: savedName,
-    desc: desc,
-    price: price,
-    photo: photo,
-    date: new Date().toLocaleString(),
-    comments: []
-  };
-
-  posts.push(newPost);
-  saveData();
-  showPosts();
-  document.getElementById("description").value = "";
-  document.getElementById("price").value = "";
-}
-
-function showPosts() {
-  const container = document.getElementById("postsList");
-  container.innerHTML = "";
-
-  posts.slice().reverse().forEach(p => {
-    const isAdmin = (savedCode === "admin" || savedCode === "michaelrodov");
-    const canDelete = isAdmin || (p.ownerCode === savedCode);
-    const deleteBtn = canDelete ? <div class="admin-delete" onclick="deletePost('${p.id}')">❌ מחק</div> : "";
-
-    let commentsHTML = "";
-    p.comments.forEach(c => {
-      commentsHTML += <div class="comment"><b>${c.name}:</b> ${c.text}</div>;
+  db.ref('posts').push({ by: savedName, desc, price, ts: Date.now() })
+    .then(() => {
+      q('description').value = '';
+      q('price').value = '';
+      alert('פורסם!');
+    })
+    .catch(err => {
+      console.error('Post error:', err);
+      alert('שגיאה בפרסום');
     });
+}
 
-    const postHTML = `
-      <div class="post">
-        <img src="${p.photo}">
-        <h4>${p.name}</h4>
-        <p>${p.desc}</p>
-        <p>💰 ${p.price ? p.price + " ₪" : "ללא מחיר"}</p>
-        <small>${p.date}</small>
-        ${deleteBtn}
-        <div class="comment-section">
-          ${commentsHTML}
-          <div class="comment-input">
-            <input type="text" placeholder="הוסף תגובה..." id="cmt-${p.id}">
-            <button onclick="addComment('${p.id}')">💬 שלח</button>
-          </div>
-        </div>
-      </div>
-    `;
-    container.innerHTML += postHTML;
+db.ref('posts').on('value', snap => {
+  const list = q('postsList');
+  if (!list) return;
+  list.innerHTML = '';
+  snap.forEach(ch => {
+    const p = ch.val() || {};
+    const div = document.createElement('div');
+    div.className = 'post';
+    div.innerHTML = <b>${p.by || 'מישהו'}</b> — ₪${p.price || 0}<br>${p.desc || ''};
+    list.appendChild(div);
   });
-}
+});
 
-function addComment(postId) {
-  const input = document.getElementById(cmt-${postId});
-  const text = input.value.trim();
-  if (!text) return;
-  const post = posts.find(p => p.id === postId);
-  post.comments.push({ name: savedName, text });
-  saveData();
-  input.value = "";
-  showPosts();
-}
-
-function deletePost(id) {
-  if (!confirm("למחוק פוסט זה?")) return;
-  posts = posts.filter(p => p.id !== id);
-  saveData();
-  showPosts();
-}
-
-function showUsersList() {
-  const c = document.getElementById("usersList");
-  c.innerHTML = "";
-  for (const code in users) {
-    const u = users[code];
-    c.innerHTML += `<div class="user-row">
-      <span>${u.name} (${code})</span>
-      <button class="user-delete" onclick="deleteAccount('${code}')">מחק</button>
-    </div>`;
-  }
-}
-
-function deleteAccount(code) {
-  delete users[code];
-  posts = posts.filter(p => p.ownerCode !== code);
-  saveData();
-  showUsersList();
-  showPosts();
+// ------------------ Admin helpers ------------------
+function loadUsers() {
+  const box = q('usersList');
+  if (!box) return;
+  db.ref('users').once('value', snap => {
+    box.innerHTML = '';
+    if (!snap.exists()) { box.textContent = 'אין משתמשים'; return; }
+    snap.forEach(ch => {
+      const u = ch.val() || {};
+      const row = document.createElement('div');
+      row.textContent = ${u.name || '—'} — קוד: ${ch.key};
+      box.appendChild(row);
+    });
+  });
 }
 
 function clearAll() {
-  if (!confirm("למחוק את כל הפוסטים?")) return;
-  posts = [];
-  saveData();
-  showPosts();
+  if (!confirm('האם אתה בטוח שברצונך למחוק את כל הפוסטים?')) return;
+  db.ref('posts').remove().then(() => alert('כל הפוסטים נמחקו'));
 }
 
-// ====== копирование кода (כפתור העתק קוד) ======
-function copyGeneratedCodeToClipboard() {
-  const codeEl = document.getElementById('generatedCode');
-  if (!codeEl) return;
-  const text = codeEl.innerText || codeEl.textContent;
-  if (!text) return;
-  navigator.clipboard.writeText(text).then(() => {
-    const msg = document.getElementById('regMessage');
-    if (msg) {
-      msg.innerText = "הקוד הועתק!";
-      setTimeout(() => msg.innerText = "נרשמת בהצלחה — שמור את הקוד!", 1800);
-    }
-  }).catch(err => {
-    alert('לא יכול להעתיק — בדוק הרשאות הדפדפן.');
-    console.error(err);
-  });
-}
+// ------------------ UI wiring ------------------
+document.addEventListener('DOMContentLoaded', () => {
+  const t = q('togglePostBox');
+  if (t) t.onclick = () => {
+    const b = q('postBox');
+    b.style.display = (b.style.display === 'block') ? 'none' : 'block';
+  };
 
-document.addEventListener("DOMContentLoaded", () => {
-  document.getElementById("registerBox").style.display = "block";
-  showPosts();
+  const copy = q('copyCodeBtn');
+  if (copy) copy.onclick = () => {
+    const code = savedCode || q('generatedCode').innerText;
+    if (code) { navigator.clipboard.writeText(code); alert('הקוד הועתק'); }
+  };
 
-  const toggleBtn = document.getElementById('togglePostBox');
-  const postBox = document.getElementById('postBox');
-  if (toggleBtn) {
-    toggleBtn.addEventListener('click', () => {
-      postBox.style.display = postBox.style.display === 'none' ? 'block' : 'none';
-    });
-  }
+  // захват фото (необязателен)
+  const cap = q('capture');
+  if (cap) cap.onclick = () => {
+    const video = q('camera'), canvas = q('photo'), preview = q('preview');
+    if (!video || !canvas || !preview) return;
+    const w = video.videoWidth, h = video.videoHeight;
+    if (!w || !h) return;
+    canvas.width = w; canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0, w, h);
+    const data = canvas.toDataURL('image/png');
+    preview.src = data; preview.style.display = 'block';
+  };
 
-  // добавляем обработчик для иврит-кнопки "העתק קוד"
-  const copyBtn = document.getElementById('copyCodeBtn');
-  if (copyBtn) {
-    copyBtn.addEventListener('click', copyGeneratedCodeToClipboard);
-  }
+  dbg('app: ready');
 });
