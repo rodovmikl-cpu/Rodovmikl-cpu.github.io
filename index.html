@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>schooltrade</title>
-  <link rel="stylesheet" href="style.css?v=3">
+  <title>SchoolTrade</title>
+  <link rel="stylesheet" href="style.css?v=5">
 </head>
 <body>
 
@@ -12,15 +12,16 @@
   <div class="box" id="registerBox">
     <h2>הרשמה</h2>
     <input type="text" id="nickname" placeholder="הכנס שם ושם משפחה שלך">
-    <button id="btnRegister">הירשם</button>
+    <button id="btnRegister" onclick="register()">הרשם</button>
     <div id="regMessage"></div>
 
     <div id="showCodeBox" style="display:none;">
       <p>הקוד שלך:</p>
       <h3 id="generatedCode"></h3>
       <button id="copyCodeBtn">העתק קוד</button>
+      <button id="newCodeBtn" onclick="newCode()">🔁 קוד חדש</button>
       <p>שמור את הקוד — תצטרך אותו כדי להתחבר!</p>
-      <button id="btnContinueToLogin">המשך</button>
+      <button onclick="continueToLogin()">המשך</button>
     </div>
   </div>
 
@@ -28,54 +29,47 @@
   <div class="box" id="loginBox" style="display:none;">
     <h2>התחברות</h2>
     <input type="text" id="loginCode" placeholder="הכנס את הקוד">
-    <button id="btnLogin">התחבר</button>
-    <div id="logMessage"></div>
+    <button onclick="login()">התחבר</button>
   </div>
 
-  <!-- ברוך הבא + מצלמה -->
+  <!-- ברוך הבא -->
   <div class="box" id="welcomeBox" style="display:none;">
     <h2 id="welcomeText"></h2>
     <video id="camera" autoplay playsinline></video><br>
     <button id="capture">📸 צלם תמונה</button>
     <canvas id="photo" style="display:none;"></canvas>
-    <img id="preview" alt="תצוגה מקדימה" style="display:none;"><br>
-    <button id="btnLogout">🔒 התנתק</button>
+    <img id="preview" style="display:none;"><br>
+    <button onclick="logout()">🔒 התנתק</button>
   </div>
 
-  <!-- כל הפוסטים -->
+  <!-- פוסטים -->
   <div id="allPosts" style="display:none;">
     <h2>🖼 פוסטים של משתמשים</h2>
     <div id="postsList"></div>
   </div>
 
-  <!-- פרסום פוסט -->
+  <!-- פרסום -->
   <div id="createPost" style="display:none;">
     <button id="togglePostBox">✏ פרסם פוסט</button>
-    <div id="postBox" style="display:none; margin-top:10px;">
+    <div id="postBox" style="display:none;">
       <textarea id="description" placeholder="כתוב תיאור או מקום מפגש"></textarea><br>
       <input type="number" id="price" placeholder="מחיר (₪)"><br>
-      <button id="btnSavePost">📤 פרסם</button>
+      <button onclick="savePost()">📤 פרסם</button>
     </div>
   </div>
 
-  <!-- פאנל מנהל -->
-  <div id="adminPanel" style="display:none;" class="box">
-    <h2>⚙ ניהול מנהל</h2>
-    <h3>רשימת חשבונות</h3>
+  <!-- מנהל -->
+  <div id="adminPanel" class="box" style="display:none;">
+    <h2>⚙ ניהול</h2>
     <div id="usersList"></div>
-    <hr>
-    <button id="btnClearAll">🗑 מחק את כל הפוסטים</button>
+    <button onclick="clearAll()">🗑 מחק את כל הפוסטים</button>
   </div>
 
-  <!-- Debug mini-box -->
-  <div id="dbg" style="position:fixed;bottom:6px;left:6px;background:#000;color:#fff;padding:4px 6px;border-radius:6px;font:12px/1 monospace;opacity:.6"></div>
-
-  <!-- Firebase SDK v8 -->
+  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
 
-  <!-- App -->
-  <script src="script.js?v=3"></script>
+  <script src="script.js?v=5"></script>
 </body>
 </html>
