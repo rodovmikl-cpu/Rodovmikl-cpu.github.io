@@ -3,20 +3,18 @@ body {
   background: linear-gradient(135deg, #f0f4ff, #d9e7ff);
   text-align: center;
   direction: rtl;
-  margin-bottom: 220px;
   color: #222;
+  margin-bottom: 200px;
 }
 
 .box {
-  background: #ffffff;
+  background: #fff;
   padding: 20px;
   margin: 20px auto;
   border-radius: 14px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
   max-width: 420px;
-  transition: transform 0.2s ease;
 }
-.box:hover { transform: scale(1.01); }
 
 input, textarea {
   width: 90%;
@@ -30,66 +28,25 @@ input, textarea {
 
 button {
   padding: 10px 16px;
-  border: none;
   background: #0078ff;
-  color: white;
+  border: none;
+  color: #fff;
   border-radius: 8px;
   cursor: pointer;
   margin: 6px;
   font-weight: bold;
-  transition: 0.3s;
 }
 button:hover { background: #005fcc; }
 
-video, canvas, img {
-  width: 100%;
-  max-width: 360px;
-  border-radius: 10px;
+#postBox, video, canvas, img {
+  width: 95%;
+  max-width: 380px;
+  border-radius: 8px;
   margin-top: 10px;
 }
 
-#allPosts { margin-bottom: 120px; }
-
-#createPost {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: #fff;
-  box-shadow: 0 -2px 12px rgba(0,0,0,0.08);
-  padding: 8px;
-  border-top: 1px solid #ddd;
-  max-width: 420px;
-  margin: 0 auto;
-  text-align: center;
-}
-
-#togglePostBox {
-  width: 95%;
-  padding: 8px;
-  border: none;
-  background: #0078ff;
-  color: white;
-  border-radius: 8px;
-  cursor: pointer;
-}
-#togglePostBox:hover { background: #005fcc; }
-
-.post {
-  background: #fff;
-  margin: 10px auto;
-  padding: 10px;
-  border-radius: 10px;
-  box-shadow: 0 0 6px rgba(0,0,0,0.06);
-  max-width: 380px;
-  text-align: right;
-}
-
-.post img { width: 100%; border-radius: 8px; }
-
 #regMessage {
-  min-height: 20px;
-  margin-top: 6px;
-  color: #0a7a00;
-  font-weight: bold;
+  color: #007a00;
+  font-weight: bold;
+  margin-top: 6px;
 }
