@@ -1,4 +1,4 @@
-// ===== Firebase конфиг =====
+// ===== Firebase config =====
 const firebaseConfig = {
   apiKey: "AIzaSyBvvebig_d426cyfqzhmUdYm1xeos1qI3g",
   authDomain: "schooltrade-24d67.firebaseapp.com",
@@ -10,100 +10,92 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
-const storage = firebase.storage();
 
+// ===== Variables =====
 let savedName = "";
 let savedCode = "";
 
-// ===== Утилиты =====
-const q = (id) => document.getElementById(id);
-const setDbg = (txt) => { const d = q("dbg"); if (d) d.textContent = txt; };
+// ===== Генератор кода =====
+function makeCode() {
+  return Math.floor(100000000 + Math.random() * 900000000).toString();
+}
 
 // ===== Регистрация =====
 function register() {
-  const nickname = q("nickname").value.trim();
+  const nickname = document.getElementById("nickname").value.trim();
   if (!nickname) return alert("אנא הכנס שם משתמש");
-  const code = Math.floor(100000000 + Math.random() * 900000000).toString();
   savedName = nickname;
-  savedCode = code;
-  db.ref('users/' + code).set({ name: nickname });
-  q("generatedCode").innerText = code;
-  q("showCodeBox").style.display = "block";
-  q("regMessage").innerText = "נרשמת בהצלחה — שמור את הקוד!";
+  savedCode = makeCode();
+
+  document.getElementById("generatedCode").innerText = savedCode;
+  document.getElementById("showCodeBox").style.display = "block";
+  document.getElementById("regMessage").innerText = "נרשמת בהצלחה — שמור את הקוד!";
+
+  db.ref('users/' + savedCode).set({ name: nickname });
+}
+
+// ===== Новый код =====
+function newCode() {
+  savedCode = makeCode();
+  document.getElementById("generatedCode").innerText = savedCode;
+  db.ref('users/' + savedCode).set({ name: savedName });
+}
+
+// ===== Продолжить к логину =====
+function continueToLogin() {
+  document.getElementById("registerBox").style.display = "none";
+  document.getElementById("loginBox").style.display = "block";
 }
 
 // ===== Вход =====
 function login() {
-  const raw = q("loginCode").value || "";
-  const loginCode = raw.normalize('NFKC').trim().toLowerCase();
+  const loginCode = document.getElementById("loginCode").value.trim().toLowerCase();
+  if (!loginCode) return alert("הכנס קוד");
 
-  // админ-вход
   if (loginCode === "admin" || loginCode === "michaelrodov") {
-    savedName = loginCode;
-    savedCode = loginCode;
     enterUser(true);
-    return;
+  } else {
+    db.ref('users/' + loginCode).once('value', snap => {
+      if (snap.exists()) {
+        savedName = snap.val().name;
+        enterUser(false);
+      } else {
+        alert("קוד שגוי!");
+      }
+    });
   }
-  if (!loginCode) { alert("אנא הזן קוד"); return; }
-
-  // обычный вход
-  db.ref('users/' + loginCode).once('value', snap => {
-    if (snap.exists()) {
-      savedName = snap.val().name;
-      savedCode = loginCode;
-      enterUser(false);
-    } else {
-      alert("קוד שגוי!");
-    }
-  });
-}
-
-// ===== Переход на экран логина после регистрации =====
-function continueToLogin() {
-  q("registerBox").style.display = "none";
-  q("loginBox").style.display = "block";
 }
 
 // ===== Выход =====
 function logout() { location.reload(); }
 
-// ===== Переход в приложение (показ экранов + камера) =====
+// ===== Вход в систему =====
 function enterUser(isAdmin) {
-  q("registerBox").style.display = "none";
-  q("loginBox").style.display = "none";
-  q("welcomeBox").style.display = "block";
-  q("createPost").style.display = "block";
-  q("allPosts").style.display = "block";
-  q("adminPanel").style.display = isAdmin ? "block" : "none";
-  q("welcomeText").innerText = "שלום, " + savedName + "!";
-  setDbg(user: ${savedName} | admin: ${isAdmin});
+  document.getElementById("registerBox").style.display = "none";
+  document.getElementById("loginBox").style.display = "none";
+  document.getElementById("welcomeBox").style.display = "block";
+  document.getElementById("createPost").style.display = "block";
+  document.getElementById("allPosts").style.display = "block";
+  document.getElementById("adminPanel").style.display = isAdmin ? "block" : "none";
 
-  // камера
-  const video = q("camera");
-  if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-    navigator.mediaDevices.getUserMedia({ video: true })
-      .then(stream => { video.srcObject = stream; })
-      .catch(() => { video.replaceWith(document.createTextNode("אין הרשאת מצלמה")); });
-  }
+  document.getElementById("welcomeText").innerText = "שלום, " + savedName + "!";
 }
 
-// ===== Публикация поста =====
+// ===== Сохранить пост =====
 function savePost() {
-  const desc = q("description").value.trim();
-  const price = Number(q("price").value || 0);
+  const desc = document.getElementById("description").value.trim();
+  const price = Number(document.getElementById("price").value || 0);
   if (!desc && !price) return;
 
-  const post = { by: savedName, desc, price, ts: Date.now() };
-  db.ref('posts').push(post);
-  q("description").value = "";
-  q("price").value = "";
+  db.ref('posts').push({ by: savedName, desc, price, ts: Date.now() });
+  document.getElementById("description").value = "";
+  document.getElementById("price").value = "";
   alert("פורסם!");
 }
 
-// ===== Список постов (live) =====
+// ===== Список постов =====
 db.ref('posts').on('value', snap => {
-  const list = q('postsList');
-  if (!list) return;
+  const list = document.getElementById('postsList');
   list.innerHTML = "";
   snap.forEach(ch => {
     const p = ch.val();
@@ -114,73 +106,10 @@ db.ref('posts').on('value', snap => {
   });
 });
 
-// ===== Список пользователей (для админа) =====
-function loadUsers() {
-  const ul = q('usersList');
-  if (!ul) return;
-  db.ref('users').once('value', snap => {
-    ul.innerHTML = "";
-    if (!snap.exists()) { ul.textContent = "אין משתמשים"; return; }
-    snap.forEach(ch => {
-      const u = ch.val();
-      const div = document.createElement('div');
-      div.textContent = ${u.name} — קוד: ${ch.key};
-      ul.appendChild(div);
-    });
-  });
-}
-
-// ===== Очистка всех постов (только админ) =====
+// ===== Удаление всех постов (админ) =====
 function clearAll() {
   if (confirm("האם אתה בטוח שברצונך למחוק את כל הפוסטים?")) {
-    db.ref('posts').remove().then(() => alert("כל הפוסטים נמחקו"));
-  }
+    db.ref('posts').remove();
+    alert("כל הפוסטים נמחקו");
+  }
 }
-
-// ===== Захват фото (по желанию) =====
-function wireCameraCapture() {
-  const btn = q('capture');
-  if (!btn) return;
-  btn.onclick = () => {
-    const video = q('camera');
-    const canvas = q('photo');
-    const preview = q('preview');
-    if (!video || !canvas || !preview) return;
-
-    const w = video.videoWidth, h = video.videoHeight;
-    canvas.width = w; canvas.height = h;
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(video, 0, 0, w, h);
-    const dataUrl = canvas.toDataURL('image/png');
-    preview.src = dataUrl;
-    preview.style.display = 'block';
-  };
-}
-
-// ===== Привязка кнопок после загрузки DOM =====
-document.addEventListener("DOMContentLoaded", () => {
-  // кнопки
-  q("btnRegister").onclick = register;
-  q("btnContinueToLogin").onclick = continueToLogin;
-  q("btnLogin").onclick = login;
-  q("btnLogout").onclick = logout;
-  q("btnSavePost").onclick = savePost;
-  q("btnClearAll").onclick = () => { clearAll(); };
-
-  const t = q("togglePostBox");
-  if (t) t.onclick = () => {
-    const b = q("postBox");
-    b.style.display = (b.style.display === "block") ? "none" : "block";
-  };
-
-  const copyBtn = q("copyCodeBtn");
-  if (copyBtn) copyBtn.onclick = () => {
-    const code = savedCode || q("generatedCode").innerText;
-    navigator.clipboard.writeText(code);
-    alert("הקוד הועתק");
-  };
-
-  wireCameraCapture();
-  loadUsers();
-  setDbg("app: ready");
-});
