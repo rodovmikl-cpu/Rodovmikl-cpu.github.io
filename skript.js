@@ -30,7 +30,7 @@ function register() {
   document.getElementById("regMessage").innerText = "נרשמת בהצלחה — שמור את הקוד!";
 }
 
-// кнопка “העתק קוד”
+// ===== Кнопка “העתק קוד” и переключение формы поста =====
 document.addEventListener("DOMContentLoaded", () => {
   const btn = document.getElementById("copyCodeBtn");
   if (btn) btn.onclick = () => {
@@ -39,10 +39,10 @@ document.addEventListener("DOMContentLoaded", () => {
     alert("הקוד הועתק");
   };
 
-  const t = document.getElementById("togglePostBox");
-  if (t) t.onclick = () => {
-    const b = document.getElementById("postBox");
-    b.style.display = (b.style.display === "block") ? "none" : "block";
+  const toggle = document.getElementById("togglePostBox");
+  if (toggle) toggle.onclick = () => {
+    const box = document.getElementById("postBox");
+    box.style.display = (box.style.display === "block") ? "none" : "block";
   };
 });
 
@@ -90,7 +90,7 @@ function enterUser(isAdmin) {
 
   document.getElementById("welcomeText").innerText = "שלום, " + savedName + "!";
 
-  // камера (работает только по HTTPS — у тебя GitHub Pages как раз HTTPS)
+  // камера (работает только по HTTPS)
   const video = document.getElementById("camera");
   if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
     navigator.mediaDevices.getUserMedia({ video: true })
@@ -123,5 +123,7 @@ db.ref('posts').on('value', snap => {
     div.className = 'post';
     div.innerHTML = <b>${p.by || "מישהו"}</b> — ₪${p.price || 0}<br>${p.desc || ""};
     list.appendChild(div);
-  });
+  });
 });
+
+// ===== Очистка постов (только для администратора
