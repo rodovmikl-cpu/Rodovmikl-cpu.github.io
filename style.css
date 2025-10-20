@@ -16,10 +16,7 @@ body {
   max-width: 420px;
   transition: transform 0.2s ease;
 }
-
-.box:hover {
-  transform: scale(1.01);
-}
+.box:hover { transform: scale(1.01); }
 
 input, textarea {
   width: 90%;
@@ -88,43 +85,7 @@ video, canvas, img {
   text-align: right;
 }
 
-.post img {
-  width: 100%;
-  border-radius: 8px;
-}
-
-.comment-section {
-  margin-top: 10px;
-  background: #f8faff;
-  border-radius: 8px;
-  padding: 6px;
-}
-
-.comment {
-  text-align: right;
-  border-bottom: 1px solid #eee;
-  padding: 4px 0;
-  font-size: 14px;
-}
-
-.comment-input {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 6px;
-}
-
-.comment-input input {
-  width: 75%;
-  padding: 6px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-}
-
-.comment-input button {
-  width: 20%;
-  font-size: 13px;
-  padding: 6px;
-}
+.post img { width: 100%; border-radius: 8px; }
 
 #regMessage {
   min-height: 20px;
