@@ -9,8 +9,8 @@ const firebaseConfig = {
   authDomain: "schooltrade-9a6b8.firebaseapp.com",
   projectId: "schooltrade-9a6b8",
   storageBucket: "schooltrade-9a6b8.appspot.com.appspot.com",
-  messagingSenderId: "XXXX",
-  appId: "XXXX"
+  messagingSenderId: "34444383953"
+  appId: "1:34444383953:web:f6402f9a3d6cd9ab5a97f0"
 };
 
 const app = initializeApp(firebaseConfig);
