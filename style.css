@@ -1,42 +1,44 @@
 body {
-  font-family: Arial, sans-serif;
+  font-family: 'Arial', sans-serif;
   background: linear-gradient(135deg, #f0f4ff, #d9e7ff);
-  color: #222;
   text-align: center;
   direction: rtl;
-  margin-bottom: 200px;
+  margin-bottom: 220px;
+  color: #222;
 }
 
 .box {
-  background: #fff;
+  background: #ffffff;
   padding: 20px;
   margin: 20px auto;
   border-radius: 14px;
-  box-shadow: 0 4px 12px rgba(0,0,0,.1);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
   max-width: 420px;
-  transition: transform .2s ease;
+  transition: transform 0.2s ease;
 }
+
 .box:hover { transform: scale(1.01); }
 
 input, textarea {
   width: 90%;
   padding: 10px;
   margin: 8px 0;
-  border: 1px solid #ccc;
   border-radius: 8px;
+  border: 1px solid #ccc;
   text-align: center;
   font-size: 15px;
 }
 
 button {
   padding: 10px 16px;
-  margin: 6px;
-  background: #0078ff;
-  color: #fff;
   border: none;
+  background: #0078ff;
+  color: white;
   border-radius: 8px;
-  font-weight: bold;
   cursor: pointer;
+  margin: 6px;
+  font-weight: bold;
+  transition: 0.3s;
 }
 button:hover { background: #005fcc; }
 
@@ -51,24 +53,68 @@ video, canvas, img {
 
 #createPost {
   position: fixed;
-  left: 0; right: 0; bottom: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
   background: #fff;
-  box-shadow: 0 -2px 12px rgba(0,0,0,.08);
-  border-top: 1px solid #ddd;
+  box-shadow: 0 -2px 12px rgba(0,0,0,0.08);
   padding: 8px;
+  border-top: 1px solid #ddd;
   max-width: 420px;
   margin: 0 auto;
+  text-align: center;
 }
+
+#togglePostBox {
+  width: 95%;
+  padding: 8px;
+  border: none;
+  background: #0078ff;
+  color: white;
+  border-radius: 8px;
+  cursor: pointer;
+}
+#togglePostBox:hover { background: #005fcc; }
 
 .post {
   background: #fff;
   margin: 10px auto;
   padding: 10px;
   border-radius: 10px;
-  box-shadow: 0 0 6px rgba(0,0,0,.06);
+  box-shadow: 0 0 6px rgba(0,0,0,0.06);
   max-width: 380px;
   text-align: right;
 }
+
 .post img { width: 100%; border-radius: 8px; }
 
-#regMessage { color: #0a7a00; font-weight: bold; margin-top: 6px; }
+.comment-section {
+  margin-top: 10px;
+  background: #f8faff;
+  border-radius: 8px;
+  padding: 6px;
+}
+
+.comment {
+  text-align: right;
+  border-bottom: 1px solid #eee;
+  padding: 4px 0;
+  font-size: 14px;
+}
+
+.comment-input {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 6px;
+}
+
+.comment-input input { width: 75%; padding: 6px; border-radius: 6px; border: 1px solid #ccc; }
+
+.comment-input button { width: 20%; font-size: 13px; padding: 6px; }
+
+#regMessage {
+  min-height: 20px;
+  margin-top: 6px;
+  color: #0a7a00;
+  font-weight: bold;
+}
