@@ -1,31 +1,79 @@
 <!DOCTYPE html>
-<html lang="he" dir="rtl">
+<html lang="he">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>SchoolTrade</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="container">
-    <h1>ברוך הבא ל־SchoolTrade</h1>
 
-    <div class="form">
-      <input type="text" id="username" placeholder="שם משתמש">
-      <input type="password" id="password" placeholder="סיסמה">
-      <button id="registerBtn">הרשם</button>
-      <button id="loginBtn">התחבר</button>
+  <!-- הרשמה -->
+  <div class="box" id="registerBox">
+    <h2>הרשמה</h2>
+    <input type="text" id="nickname" placeholder="הכנס שם משתמש">
+    <button onclick="register()">הרשם</button>
+    <div id="regMessage"></div>
+
+    <div id="showCodeBox" style="display:none;">
+      <p>הקוד שלך:</p>
+      <h3 id="generatedCode"></h3>
+      <button id="copyCodeBtn" onclick="copyCode()">העתק קוד</button>
+      <p>שמור את הקוד — תצטרך אותו כדי להתחבר!</p>
+      <button onclick="continueToLogin()">המשך</button>
     </div>
-
-    <div id="status"></div>
   </div>
 
-  <!-- Firebase SDK (compat версии) -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <!-- התחברות -->
+  <div class="box" id="loginBox" style="display:none;">
+    <h2>התחברות</h2>
+    <input type="text" id="loginCode" placeholder="הכנס את הקוד">
+    <button onclick="login()">התחבר</button>
+    <div id="logMessage"></div>
+  </div>
 
-  <!-- Подключаем основной JS -->
+  <!-- ברוך הבא -->
+  <div class="box" id="welcomeBox" style="display:none;">
+    <h2 id="welcomeText"></h2>
+    <video id="camera" autoplay playsinline></video><br>
+    <button id="capture">📸 צלם תמונה</button>
+    <canvas id="photo" style="display:none;"></canvas>
+    <img id="preview" alt="תצוגה מקדימה" style="display:none;"><br>
+    <button onclick="logout()">🔒 התנתק</button>
+  </div>
+
+  <!-- פוסטים -->
+  <div id="allPosts" style="display:none;">
+    <h2>🖼 פוסטים של משתמשים</h2>
+    <div id="postsList"></div>
+  </div>
+
+  <!-- יצירת פוסט -->
+  <div id="createPost" style="display:none;">
+    <button id="togglePostBox" onclick="togglePostBox()">✏ פרסם פוסט</button>
+    <div id="postBox" style="display:none; margin-top:10px;">
+      <textarea id="description" placeholder="כתוב תיאור או מקום מפגש"></textarea><br>
+      <input type="number" id="price" placeholder="מחיר (₪)"><br>
+      <button onclick="savePost()">📤 פרסם</button>
+    </div>
+  </div>
+
+  <!-- ניהול אדמין -->
+  <div id="adminPanel" style="display:none;" class="box">
+    <h2>⚙ ניהול מנהל</h2>
+    <h3>רשימת חשבונות</h3>
+    <div id="usersList"></div>
+    <hr>
+    <button onclick="clearAll()">🗑 מחק את כל הפוסטים</button>
+  </div>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+
+  <!-- JS код -->
   <script src="script.js"></script>
 </body>
 </html>
