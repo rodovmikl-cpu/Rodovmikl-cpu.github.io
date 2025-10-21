@@ -12,16 +12,8 @@
   <div class="box" id="registerBox">
     <h2>הרשמה</h2>
     <input type="text" id="nickname" placeholder="הכנס שם ושם משפחה שלך">
-    <button onclick="register()">הירשם</button>
+    <button onclick="register()">הרשם</button>
     <div id="regMessage"></div>
-
-    <div id="showCodeBox" style="display:none;">
-      <p>הקוד שלך:</p>
-      <h3 id="generatedCode"></h3>
-      <button id="copyCodeBtn">העתק קוד</button>
-      <p>שמור את הקוד — תצטרך אותו כדי להתחבר!</p>
-      <button onclick="continueToLogin()">המשך</button>
-    </div>
   </div>
 
   <!-- вход -->
@@ -67,7 +59,10 @@
     <button onclick="clearAll()">🗑 מחק את כל הפוסטים</button>
   </div>
 
-  <!-- Firebase SDK -->
-  <script type="module" src="script.js"></script>
+  <!-- Firebase SDK через CDN -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>
