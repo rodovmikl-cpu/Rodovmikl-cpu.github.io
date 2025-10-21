@@ -258,4 +258,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const copyBtn = document.getElementById('copyCodeBtn');
   if (copyBtn) copyBtn.addEventListener('click', copyGeneratedCodeToClipboard);
+  // ====== делаем функции доступными из HTML ======
+window.register = register;
+window.continueToLogin = continueToLogin;
+window.login = login;
+window.logout = logout;
+window.savePost = savePost;
+window.addComment = addComment;
+window.deletePost = deletePost;
+window.deleteAccount = deleteAccount;
+window.clearAll = clearAll;
 });
