@@ -1,68 +1,31 @@
 <!DOCTYPE html>
-<html lang="he">
+<html lang="he" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>schooltrade</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SchoolTrade</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <div class="container">
+    <h1>ברוך הבא ל־SchoolTrade</h1>
 
-  <!-- регистрация -->
-  <div class="box" id="registerBox">
-    <h2>הרשמה</h2>
-    <input type="text" id="nickname" placeholder="הכנס שם ושם משפחה שלך">
-    <button onclick="register()">הרשם</button>
-    <div id="regMessage"></div>
-  </div>
-
-  <!-- вход -->
-  <div class="box" id="loginBox" style="display:none;">
-    <h2>התחברות</h2>
-    <input type="text" id="loginCode" placeholder="הכנס את הקוד">
-    <button onclick="login()">התחבר</button>
-    <div id="logMessage"></div>
-  </div>
-
-  <!-- приветствие + камера -->
-  <div class="box" id="welcomeBox" style="display:none;">
-    <h2 id="welcomeText"></h2>
-    <video id="camera" autoplay playsinline></video><br>
-    <button id="capture">📸 צלם תמונה</button>
-    <canvas id="photo" style="display:none;"></canvas>
-    <img id="preview" alt="תצוגה מקדימה" style="display:none;"><br>
-    <button onclick="logout()">🔒 התנתק</button>
-  </div>
-
-  <!-- все посты -->
-  <div id="allPosts" style="display:none;">
-    <h2>🖼 פוסטים של משתמשים</h2>
-    <div id="postsList"></div>
-  </div>
-
-  <!-- блок публикации -->
-  <div id="createPost" style="display:none;">
-    <button id="togglePostBox">✏ פרסם פוסט</button>
-    <div id="postBox" style="display:none; margin-top:10px;">
-      <textarea id="description" placeholder="כתוב תיאור או מקום מפגש"></textarea><br>
-      <input type="number" id="price" placeholder="מחיר (₪)"><br>
-      <button onclick="savePost()">📤 פרסם</button>
+    <div class="form">
+      <input type="text" id="username" placeholder="שם משתמש">
+      <input type="password" id="password" placeholder="סיסמה">
+      <button id="registerBtn">הרשם</button>
+      <button id="loginBtn">התחבר</button>
     </div>
+
+    <div id="status"></div>
   </div>
 
-  <!-- панель администратора -->
-  <div id="adminPanel" style="display:none;" class="box">
-    <h2>⚙ ניהול מנהל</h2>
-    <h3>רשימת חשבונות</h3>
-    <div id="usersList"></div>
-    <hr>
-    <button onclick="clearAll()">🗑 מחק את כל הפוסטים</button>
-  </div>
-
-  <!-- Firebase SDK через CDN -->
+  <!-- Firebase SDK (compat версии) -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+
+  <!-- Подключаем основной JS -->
   <script src="script.js"></script>
 </body>
 </html>
