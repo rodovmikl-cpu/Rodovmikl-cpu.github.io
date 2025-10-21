@@ -2,9 +2,19 @@
 <html lang="he">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SchoolTrade</title>
-  <link rel="stylesheet" href="css/style.css">
+  <style>
+    body { font-family: Arial, sans-serif; margin:20px; background:#f0f0f0; }
+    .box { background:white; padding:15px; margin-bottom:20px; border-radius:8px; box-shadow:0 2px 5px rgba(0,0,0,0.2);}
+    input, textarea, button { margin:5px 0; padding:8px; font-size:16px; width:100%; }
+    #postsList .post { background:#fff; padding:10px; margin:10px 0; border-radius:6px; box-shadow:0 1px 3px rgba(0,0,0,0.1); }
+    img { max-width:100%; display:block; margin:10px 0; }
+    .comment-section { margin-top:10px; border-top:1px solid #ccc; padding-top:5px; }
+    .comment-input { display:flex; gap:5px; margin-top:5px; }
+    .comment-input input { flex:1; }
+    .admin-delete, .user-delete { cursor:pointer; color:red; font-weight:bold; margin-top:5px; }
+  </style>
 </head>
 <body>
 
@@ -18,7 +28,7 @@
     <div id="showCodeBox" style="display:none;">
       <p>הקוד שלך:</p>
       <h3 id="generatedCode"></h3>
-      <button id="copyCodeBtn" onclick="copyCode()">העתק קוד</button>
+      <button onclick="copyCode()">העתק קוד</button>
       <p>שמור את הקוד — תצטרך אותו כדי להתחבר!</p>
       <button onclick="continueToLogin()">המשך</button>
     </div>
@@ -35,7 +45,7 @@
   <!-- ברוך הבא -->
   <div class="box" id="welcomeBox" style="display:none;">
     <h2 id="welcomeText"></h2>
-    <video id="camera" autoplay playsinline></video><br>
+    <video id="camera" autoplay playsinline style="width:100%; max-width:400px;"></video><br>
     <button id="capture">📸 צלם תמונה</button>
     <canvas id="photo" style="display:none;"></canvas>
     <img id="preview" alt="תצוגה מקדימה" style="display:none;"><br>
@@ -49,8 +59,8 @@
   </div>
 
   <!-- יצירת פוסט -->
-  <div id="createPost" style="display:none;">
-    <button id="togglePostBox" onclick="togglePostBox()">✏ פרסם פוסט</button>
+  <div id="createPost" style="display:none;" class="box">
+    <button id="togglePostBox">✏ פרסם פוסט</button>
     <div id="postBox" style="display:none; margin-top:10px;">
       <textarea id="description" placeholder="כתוב תיאור או מקום מפגש"></textarea><br>
       <input type="number" id="price" placeholder="מחיר (₪)"><br>
@@ -71,9 +81,244 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 
-  <!-- JS код -->
-  <script src="js/script.js"></script>
-</body>
-</html>
+  <!-- JS -->
+  <script>
+    // ============ Firebase הגדרה ============
+    const firebaseConfig = {
+      apiKey: "AIzaSyDIItYSQdfdDxw8OAbdcWicaD3dCOEulII",
+      authDomain: "schooltrade-9a6b8.firebaseapp.com",
+      projectId: "schooltrade-9a6b8",
+      storageBucket: "schooltrade-9a6b8.appspot.com",
+      messagingSenderId: "29580124691",
+      appId: "1:29580124691:web:8439f37bba78d81e0997d1"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const storage = firebase.storage();
+
+    let savedCode = "";
+    let savedName = "";
+
+    // ============ הרשמה ============
+    async function register() {
+      const nickname = document.getElementById("nickname").value.trim();
+      const regMsg = document.getElementById("regMessage");
+      if (!nickname) {
+        regMsg.innerText = "אנא הכנס שם משתמש";
+        return;
+      }
+
+      let code;
+      do {
+        code = Math.floor(100000000 + Math.random() * 900000000).toString();
+        const doc = await db.collection("users").doc(code).get();
+        if (!doc.exists) break;
+      } while (true);
+
+      await db.collection("users").doc(code).set({ name: nickname });
+      savedName = nickname;
+      savedCode = code;
+
+      document.getElementById("generatedCode").innerText = code;
+      document.getElementById("showCodeBox").style.display = "block";
+      regMsg.innerText = "נרשמת בהצלחה — שמור את הקוד!";
+    }
+
+    // ============ התחברות ============
+    async function login() {
+      const code = document.getElementById("loginCode").value.trim();
+      const msg = document.getElementById("logMessage");
+      msg.innerText = "";
+
+      if (code === "admin" || code === "michaelrodov") {
+        savedCode = code;
+        savedName = code;
+        enterUser(true);
+        return;
+      }
+
+      const doc = await db.collection("users").doc(code).get();
+      if (doc.exists) {
+        savedCode = code;
+        savedName = doc.data().name;
+        enterUser(false);
+      } else {
+        msg.innerText = "קוד שגוי!";
+      }
+    }
+
+    // ============ כניסה למשתמש ============
+    function enterUser(isAdmin) {
+      document.getElementById("registerBox").style.display = "none";
+      document.getElementById("loginBox").style.display = "none";
+      document.getElementById("welcomeBox").style.display = "block";
+      document.getElementById("allPosts").style.display = "block";
+      document.getElementById("createPost").style.display = isAdmin ? "none" : "block";
+      document.getElementById("adminPanel").style.display = isAdmin ? "block" : "none";
+      document.getElementById("welcomeText").innerText = "ברוך הבא, " + savedName + "!";
+
+      if (!isAdmin) startCamera();
+      listenPosts(); // реалтайм обновления
+      if (isAdmin) showUsersList();
+    }
+
+    // ============ מצלמה ============
+    function startCamera() {
+      const video = document.getElementById('camera');
+      const canvas = document.getElementById('photo');
+      const preview = document.getElementById('preview');
+      const captureButton = document.getElementById('capture');
+
+      if (captureButton._listenerAdded) return;
+      captureButton._listenerAdded = true;
+
+      navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+        .then(stream => { video.srcObject = stream; })
+        .catch(err => console.warn('שגיאה במצלמה:', err));
+
+      captureButton.addEventListener('click', () => {
+        const ctx = canvas.getContext('2d');
+        if (!video.videoWidth) {
+          alert("המתן לטעינה");
+          return;
+        }
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        preview.src = canvas.toDataURL('image/png');
+        preview.style.display = 'block';
+      });
+    }
+
+    // ============ פרסום פוסט ============
+    async function savePost() {
+      const descElem = document.getElementById("description");
+      const priceElem = document.getElementById("price");
+      const preview = document.getElementById("preview");
+
+      const desc = descElem.value.trim();
+      const price = priceElem.value.trim();
+      const imgData = preview.src;
+
+      if (!desc || !imgData || preview.style.display === "none") {
+        alert("צריך תיאור ותמונה!");
+        return;
+      }
+
+      try {
+        const imgRef = storage.ref("photos/" + Date.now() + ".png");
+        const response = await fetch(imgData);
+        const blob = await response.blob();
+        await imgRef.put(blob);
+        const url = await imgRef.getDownloadURL();
+
+        await db.collection("posts").add({
+          ownerCode: savedCode,
+          name: savedName,
+          desc,
+          price,
+          photo: url,
+          date: new Date().toLocaleString(),
+          comments: []
+        });
+
+        descElem.value = "";
+        priceElem.value = "";
+        preview.style.display = "none";
+
+        alert("פוסט פורסם בהצלחה!");
+      } catch (e) {
+        console.error("שגיאה בעת פרסום הפוסט:", e);
+        alert("שגיאה בעת פרסום הפוסט");
+      }
+    }
+
+    // ============ צפיה בפוסטים בזמן אמת ============
+    function listenPosts() {
+      const container = document.getElementById("postsList");
+      db.collection("posts").orderBy("date", "desc").onSnapshot(snapshot => {
+        container.innerHTML = "";
+        snapshot.forEach(doc => {
+          const p = { id: doc.id, ...doc.data() };
+          const isAdmin = (savedCode === "admin" || savedCode === "michaelrodov");
+          const canDelete = isAdmin || (p.ownerCode === savedCode);
+          const deleteBtn = canDelete ? <div class="admin-delete" onclick="deletePost('${p.id}', '${p.photo}')">❌ מחק</div> : "";
+
+          let commentsHTML = "";
+          (p.comments || []).forEach(c => {
+            commentsHTML += <div class="comment"><b>${c.name}:</b> ${c.text}</div>;
+          });
+
+          container.innerHTML += `
+            <div class="post">
+              <img src="${p.photo}">
+              <h4>${p.name}</h4>
+              <p>${p.desc}</p>
+              <p>💰 ${p.price ? p.price + " ₪" : "ללא מחיר"}</p>
+              <small>${p.date}</small>
+              ${deleteBtn}
+              <div class="comment-section">
+                ${commentsHTML}
+                <div class="comment-input">
+                  <input type="text" placeholder="הוסף תגובה..." id="cmt-${p.id}">
+                  <button onclick="addComment('${p.id}')">💬 שלח</button>
+                </div>
+              </div>
+            </div>`;
+        });
+      });
+    }
+
+    // ============ תגובות ============
+    async function addComment(postId) {
+      const input = document.getElementById(cmt-${postId});
+      const text = input.value.trim();
+      if (!text) return;
+
+      const ref = db.collection("posts").doc(postId);
+      const doc = await ref.get();
+      const data = doc.data();
+      data.comments.push({ name: savedName, text });
+      await ref.update({ comments: data.comments });
+      input.value = "";
+    }
+
+    // ============ מחיקת פוסט ============
+    async function deletePost(id, photoUrl) {
+      if (!confirm("למחוק פוסט זה?")) return;
+      await db.collection("posts").doc(id).delete();
+      if (photoUrl) {
+        try {
+          const ref = storage.refFromURL(photoUrl);
+          await ref.delete();
+        } catch (e) { console.warn("שגיאה במחיקת תמונה:", e); }
+      }
+    }
+
+    // ============ רשימת משתמשים לאדמין ============
+    async function showUsersList() {
+      const c = document.getElementById("usersList");
+      const snap = await db.collection("users").get();
+      c.innerHTML = "";
+      snap.forEach(doc => {
+        const code = doc.id;
+        const u = doc.data();
+        c.innerHTML += `<div class="user-row">
+          <span>${u.name} (${code})</span>
+          <button class="user-delete" onclick="deleteAccount('${code}')">מחק</button>
+        </div>`;
+      });
+    }
+
+    // ============ מחיקת משתמש ============
+    async function deleteAccount(code) {
+      if (!confirm("למחוק משתמש זה וכל הפוסטים שלו?")) return;
+      await db.collection("users").doc(code).delete();
+
+      const snap = await db.collection("posts").where("ownerCode", "==", code).get();
+      for (const doc of snap.docs) {
+        const data = doc.data();
+        await db.collection("posts").doc(doc.id).delete();
+        if (data.photo)
