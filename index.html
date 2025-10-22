@@ -84,34 +84,6 @@
       text-align: right;
     }
     .post img { width: 100%; border-radius: 8px; }
-    .comment-section {
-      margin-top: 10px;
-      background: #f8faff;
-      border-radius: 8px;
-      padding: 6px;
-    }
-    .comment {
-      text-align: right;
-      border-bottom: 1px solid #eee;
-      padding: 4px 0;
-      font-size: 14px;
-    }
-    .comment-input {
-      display: flex;
-      justify-content: space-between;
-      margin-top: 6px;
-    }
-    .comment-input input {
-      width: 75%;
-      padding: 6px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-    }
-    .comment-input button {
-      width: 20%;
-      font-size: 13px;
-      padding: 6px;
-    }
     #regMessage {
       min-height: 20px;
       margin-top: 6px;
@@ -126,7 +98,7 @@
   <div class="box" id="registerBox">
     <h2>הרשמה</h2>
     <input type="text" id="nickname" placeholder="הכנס שם ושם משפחה שלך">
-    <button onclick="register()">הירשם</button>
+    <button id="registerBtn">הירשם</button>
     <div id="regMessage"></div>
 
     <div id="showCodeBox" style="display:none;">
@@ -134,7 +106,7 @@
       <h3 id="generatedCode"></h3>
       <button id="copyCodeBtn">העתק קוד</button>
       <p>שמור את הקוד — תצטרך אותו כדי להתחבר!</p>
-      <button onclick="continueToLogin()">המשך</button>
+      <button id="continueBtn">המשך</button>
     </div>
   </div>
 
@@ -142,7 +114,7 @@
   <div class="box" id="loginBox" style="display:none;">
     <h2>התחברות</h2>
     <input type="text" id="loginCode" placeholder="הכנס את הקוד">
-    <button onclick="login()">התחבר</button>
+    <button id="loginBtn">התחבר</button>
     <div id="logMessage"></div>
   </div>
 
@@ -153,7 +125,7 @@
     <button id="capture">📸 צלם תמונה</button>
     <canvas id="photo" style="display:none;"></canvas>
     <img id="preview" alt="תצוגה מקדימה" style="display:none;"><br>
-    <button onclick="logout()">🔒 התנתק</button>
+    <button id="logoutBtn">🔒 התנתק</button>
   </div>
 
   <!-- все посты -->
@@ -168,36 +140,30 @@
     <div id="postBox" style="display:none; margin-top:10px;">
       <textarea id="description" placeholder="כתוב תיאור או מקום מפגש"></textarea><br>
       <input type="number" id="price" placeholder="מחיר (₪)"><br>
-      <button onclick="savePost()">📤 פרסם</button>
+      <button id="savePostBtn">📤 פרסם</button>
     </div>
-  </div>
-
-  <!-- панель администратора -->
-  <div id="adminPanel" style="display:none;" class="box">
-    <h2>⚙ ניהול מנהל</h2>
-    <h3>רשימת חשבונות</h3>
-    <div id="usersList"></div>
-    <hr>
-    <button onclick="clearAll()">🗑 מחק את כל הפוסטים</button>
   </div>
 
   <!-- Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
+    // === Настройки Supabase ===
     const SUPABASE_URL = "https://fxskzfjezoolsgqytumw.supabase.co";
     const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ4c2t6Zmplem9vbHNncXl0dW13Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEwNTkzODksImV4cCI6MjA3NjYzNTM4OX0.MYIWkWhdVNzlqs53l4a4eJXQJeJpf0bD3kQQCDN-zrI";
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     let savedCode = "", savedName = "";
 
+    // === регистрация ===
     async function register() {
       const nickname = document.getElementById("nickname").value.trim();
       if (!nickname) return alert("אנא הכנס שם משתמש");
       const code = Math.floor(100000000 + Math.random() * 900000000).toString();
 
-      await supabase.from("users").insert([{ code, name: nickname }]);
-      savedCode = code; savedName = nickname;
+      const { error } = await supabase.from("users").insert([{ code, name: nickname }]);
+      if (error) return alert("שגיאה בשמירה: " + error.message);
 
+      savedCode = code; savedName = nickname;
       document.getElementById("generatedCode").innerText = code;
       document.getElementById("showCodeBox").style.display = "block";
       document.getElementById("regMessage").innerText = "נרשמת בהצלחה — שמור את הקוד!";
@@ -226,17 +192,15 @@
       document.getElementById("allPosts").style.display = "block";
       document.getElementById("createPost").style.display = isAdmin ? "none" : "block";
       document.getElementById("welcomeText").innerText = "ברוך הבא, " + name;
-      document.getElementById("adminPanel").style.display = isAdmin ? "block" : "none";
-      showPosts();
-      if (isAdmin) showUsersList();
+      if (!isAdmin) showPosts();
     }
 
     async function savePost() {
       const desc = document.getElementById("description").value.trim();
       const price = document.getElementById("price").value.trim();
-      const photo = document.getElementById("preview").src;
-      if (!desc || !photo) return alert("צריך תיאור ותמונה!");
-      await supabase.from("posts").insert([{ usercode: savedCode, name: savedName, desc, price, photo }]);
+      if (!desc) return alert("צריך תיאור!");
+      const { error } = await supabase.from("posts").insert([{ usercode: savedCode, name: savedName, desc, price }]);
+      if (error) alert("שגיאה בפרסום: " + error.message);
       document.getElementById("description").value = "";
       document.getElementById("price").value = "";
       showPosts();
@@ -245,36 +209,28 @@
     async function showPosts() {
       const container = document.getElementById("postsList");
       container.innerHTML = "";
-      const { data } = await supabase.from("posts").select().order("created_at", { ascending: false });
+      const { data, error } = await supabase.from("posts").select().order("created_at", { ascending: false });
+      if (error) return console.error(error);
       data.forEach(p => {
-        const canDelete = (savedCode === "admin" || savedCode === "michaelrodov" || p.usercode === savedCode);
         container.innerHTML += `
           <div class="post">
-            <img src="${p.photo}">
             <h4>${p.name}</h4>
             <p>${p.desc}</p>
             <p>💰 ${p.price || "ללא מחיר"}</p>
-            <small>${new Date(p.created_at).toLocaleString()}</small>
-            ${canDelete ? <div onclick="deletePost('${p.id}')">❌ מחק</div> : ""}
           </div>`;
       });
-    }
-
-    async function deletePost(id) {
-      if (!confirm("למחוק פוסט זה?")) return;
-      await supabase.from("posts").delete().eq("id", id);
-      showPosts();
-    }
-
-    async function showUsersList() {
-      const c = document.getElementById("usersList");
-      const { data } = await supabase.from("users").select();
-      c.innerHTML = data.map(u => <div>${u.name} (${u.code})</div>).join("");
     }
 
     function logout() {
       location.reload();
     }
+
+    // Привязка кнопок (исправлено!)
+    document.getElementById("registerBtn").onclick = register;
+    document.getElementById("continueBtn").onclick = continueToLogin;
+    document.getElementById("loginBtn").onclick = login;
+    document.getElementById("savePostBtn").onclick = savePost;
+    document.getElementById("logoutBtn").onclick = logout;
   </script>
 </body>
 </html>
