@@ -21,214 +21,196 @@
       box-shadow: 0 4px 12px rgba(0,0,0,0.1);
       max-width: 420px;
     }
-    input, textarea {
-      width: 90%;
-      padding: 10px;
-      margin: 8px 0;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-      text-align: center;
-      font-size: 15px;
-    }
-    button {
-      padding: 10px 16px;
-      border: none;
-      background: #0078ff;
-      color: white;
-      border-radius: 8px;
-      cursor: pointer;
-      margin: 6px;
-      font-weight: bold;
-      transition: 0.3s;
-    }
-    button:hover { background: #005fcc; }
-    .deleteBtn { background:#ff5252; margin-left:6px; }
-    .deleteBtn:hover { background:#c62828; }
-    video, img {
-      width: 100%;
-      max-width: 360px;
-      border-radius: 10px;
-      margin-top: 10px;
-    }
-    #regMessage, #logMessage, #adminMsg {
-      min-height: 20px;
-      margin-top: 6px;
-      font-weight: bold;
-    }
-    .list-item { display:flex; justify-content:space-between; align-items:center; padding:4px 0; border-bottom:1px solid #eee; }
+    input, textarea { width:90%; padding:10px; margin:8px 0; border-radius:8px; border:1px solid #ccc; text-align:center; font-size:15px; }
+    button { padding:10px 16px; border:none; background:#0078ff; color:white; border-radius:8px; cursor:pointer; margin:6px; font-weight:bold; transition:0.3s; }
+    button:hover { background:#005fcc; }
+    video, img { width:100%; max-width:360px; border-radius:10px; margin-top:10px; }
+    #regMessage { min-height:20px; margin-top:6px; color:#0a7a00; font-weight:bold; }
+    #allPosts { margin-bottom:120px; }
   </style>
 </head>
 <body>
 
-  <!-- регистрация -->
-  <div class="box" id="registerBox">
-    <h2>הרשמה</h2>
-    <input type="text" id="nickname" placeholder="הכנס שם ושם משפחה שלך">
-    <button id="registerBtn">הרשם</button>
-    <div id="regMessage"></div>
-    <div id="showCodeBox" style="display:none;">
-      <p>הקוד שלך:</p>
-      <h3 id="generatedCode"></h3>
-      <button id="copyCodeBtn">העתק קוד</button>
-      <p>שמור את הקוד — תצטרך אותו כדי להתחבר!</p>
-      <button id="continueBtn">המשך</button>
-    </div>
+<!-- регистрация -->
+<div class="box" id="registerBox">
+  <h2>הרשמה</h2>
+  <input type="text" id="nickname" placeholder="הכנס שם ושם משפחה שלך">
+  <button id="registerBtn">הרשם</button>
+  <div id="regMessage"></div>
+  <div id="showCodeBox" style="display:none;">
+    <p>הקוד שלך:</p>
+    <h3 id="generatedCode"></h3>
+    <button id="copyCodeBtn">העתק קוד</button>
+    <p>שמור את הקוד — תצטרך אותו כדי להתחבר!</p>
+    <button id="continueBtn">המשך</button>
   </div>
+</div>
 
-  <!-- вход -->
-  <div class="box" id="loginBox" style="display:none;">
-    <h2>התחברות</h2>
-    <input type="text" id="loginCode" placeholder="הכנס את הקוד">
-    <button id="loginBtn">התחבר</button>
-    <div id="logMessage"></div>
-  </div>
+<!-- вход -->
+<div class="box" id="loginBox" style="display:none;">
+  <h2>התחברות</h2>
+  <input type="text" id="loginCode" placeholder="הכנס את הקוד">
+  <button id="loginBtn">התחבר</button>
+  <div id="logMessage"></div>
+</div>
 
-  <!-- приветствие -->
-  <div class="box" id="welcomeBox" style="display:none;">
-    <h2 id="welcomeText"></h2>
-    <video id="camera" autoplay playsinline></video><br>
-    <button id="capture">📸 צלם תמונה</button>
-    <canvas id="photo" style="display:none;"></canvas>
-    <img id="preview" style="display:none;">
-    <button id="logoutBtn">🔒 התנתק</button>
-  </div>
+<!-- приветствие -->
+<div class="box" id="welcomeBox" style="display:none;">
+  <h2 id="welcomeText"></h2>
+  <video id="camera" autoplay playsinline></video><br>
+  <button id="capture">📸 צלם תמונה</button>
+  <canvas id="photo" style="display:none;"></canvas>
+  <img id="preview" style="display:none;">
+  <button id="logoutBtn">🔒 התנתק</button>
+</div>
 
-  <!-- админ -->
-  <div class="box" id="adminBox" style="display:none;">
-    <h2>ניהול מערכת</h2>
-    <h3>משתמשים:</h3>
-    <div id="usersList"></div>
-    <h3>פוסטים:</h3>
-    <div id="postsList"></div>
-    <div id="adminMsg"></div>
-    <button onclick="logout()">🔒 התנתק</button>
-  </div>
+<!-- админка -->
+<div class="box" id="adminBox" style="display:none;">
+  <h2>⚙ ניהול מנהל</h2>
+  <div id="usersList"></div>
+  <hr>
+  <button id="clearAll">🗑 מחק את כל הפוסטים</button>
+</div>
 
-  <script type="module">
-    import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+<script type="module">
+  import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-    const supabaseUrl = "https://fxskzfjezoolsgqytumw.supabase.co";
-    const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ4c2t6Zmplem9vbHNncXl0dW13Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEwNTkzODksImV4cCI6MjA3NjYzNTM4OX0.MYIWkWhdVNzlqs53l4a4eJXQJeJpf0bD3kQQCDN-zrI";
-    const supabase = createClient(supabaseUrl, supabaseKey);
+  const supabaseUrl = "https://fxskzfjezoolsgqytumw.supabase.co";
+  const supabaseKey = "YOUR_SUPABASE_KEY";
+  const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // ======== Основные переменные ========
-    let users = JSON.parse(localStorage.getItem("users") || "{}");
-    let savedCode = "", savedName = "";
+  let users = JSON.parse(localStorage.getItem("users") || "{}");
+  let posts = JSON.parse(localStorage.getItem("posts") || "[]");
+  let savedCode = "", savedName = "";
 
-    function saveData() {
-      localStorage.setItem("users", JSON.stringify(users));
+  function saveData() {
+    localStorage.setItem("users", JSON.stringify(users));
+    localStorage.setItem("posts", JSON.stringify(posts));
+  }
+
+  // ===== регистрация =====
+  function register() {
+    const nickname = document.getElementById("nickname").value.trim();
+    if (!nickname) { document.getElementById("regMessage").innerText="אנא הכנס שם משתמש"; return; }
+
+    let code;
+    do { code=Math.floor(100000000+Math.random()*900000000).toString(); } while(users[code]);
+
+    users[code]={name:nickname};
+    saveData();
+    savedName = nickname; savedCode = code;
+
+    document.getElementById("generatedCode").innerText=code;
+    document.getElementById("showCodeBox").style.display="block";
+    document.getElementById("regMessage").innerText="נרשמת בהצלחה — שמור את הקוד!";
+  }
+
+  // ===== продолжить =====
+  function continueToLogin(){
+    document.getElementById("registerBox").style.display="none";
+    document.getElementById("loginBox").style.display="block";
+  }
+
+  // ===== login =====
+  function login(){
+    const loginCode=document.getElementById("loginCode").value.trim();
+    document.getElementById("logMessage").innerText="";
+    if(loginCode==="admin"){
+      savedCode=loginCode; savedName=loginCode; showAdmin(); return;
     }
+    if(users[loginCode]){
+      savedCode=loginCode; savedName=users[loginCode].name; enterUser();
+    } else { document.getElementById("logMessage").innerText="קוד שגוי!"; }
+  }
 
-    // ======== Регистрация ========
-    function register() {
-      try {
-        const nickname = document.getElementById("nickname").value.trim();
-        if (!nickname) {
-          document.getElementById("regMessage").innerText = "אנא הכנס שם משתמש";
-          return;
-        }
+  function enterUser(){
+    document.getElementById("loginBox").style.display="none";
+    document.getElementById("welcomeBox").style.display="block";
+    document.getElementById("welcomeText").innerText="ברוך הבא, "+savedName+"!";
+    startCamera();
+  }
 
-        let code;
-        do {
-          code = Math.floor(100000000 + Math.random() * 900000000).toString();
-        } while (users[code]);
+  function logout(){
+    document.getElementById("welcomeBox").style.display="none";
+    document.getElementById("adminBox").style.display="none";
+    document.getElementById("registerBox").style.display="block";
+    document.getElementById("showCodeBox").style.display="none";
+    document.getElementById("nickname").value="";
+    savedCode=""; savedName="";
+  }
 
-        users[code] = { name: nickname };
-        saveData();
+  // ===== camera =====
+  function startCamera(){
+    const video=document.getElementById('camera');
+    navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}})
+      .then(stream=>{video.srcObject=stream;})
+      .catch(err=>{console.warn('⚠ שגיאה במצלמה:',err);});
+  }
 
-        savedName = nickname;
-        savedCode = code;
+  document.getElementById("capture").addEventListener("click", async ()=>{
+    const video=document.getElementById('camera');
+    const canvas=document.getElementById('photo');
+    const preview=document.getElementById('preview');
+    canvas.width=video.videoWidth; canvas.height=video.videoHeight;
+    canvas.getContext('2d').drawImage(video,0,0,canvas.width,canvas.height);
+    const dataUrl=canvas.toDataURL('image/png');
+    preview.src=dataUrl; preview.style.display='block';
 
-        document.getElementById("generatedCode").innerText = code;
-        document.getElementById("showCodeBox").style.display = "block";
-        document.getElementById("regMessage").innerText = "נרשמת בהצלחה — שמור את הקוד!";
-      } catch (err) {
-        console.error("❌ Ошибка в register():", err);
-        alert("שגיאה בהרשמה — בדוק את הקונסול!");
-      }
+    // ===== upload to Supabase =====
+    if(savedCode && savedCode!=="admin"){
+      const blob=await (await fetch(dataUrl)).blob();
+      const fileName=photos/${savedCode}_${Date.now()}.png;
+      const {error}=await supabase.storage.from('photos').upload(fileName,blob,{upsert:true});
+      if(error) console.error("Ошибка загрузки:",error);
+      else console.log("Фото сохранено в Supabase:",fileName);
     }
+  });
 
-    // ======== Продолжить ========
-    function continueToLogin() {
-      document.getElementById("registerBox").style.display = "none";
-      document.getElementById("loginBox").style.display = "block";
+  // ===== admin =====
+  function showAdmin(){
+    document.getElementById("loginBox").style.display="none";
+    document.getElementById("adminBox").style.display="block";
+    renderUsersList();
+  }
+
+  function renderUsersList(){
+    const container=document.getElementById("usersList");
+    container.innerHTML="";
+    for(const code in users){
+      const user=users[code];
+      const div=document.createElement('div');
+      div.innerHTML=${user.name} (${code}) <button onclick="deleteAccount('${code}')">מחק</button>;
+      container.appendChild(div);
     }
+  }
 
-    // ======== Вход ========
-    async function login() {
-      try {
-        const loginCode = document.getElementById("loginCode").value.trim();
-        if (loginCode === "admin") {
-          document.getElementById("loginBox").style.display = "none";
-          await showAdmin();
-          return;
-        }
+  async function deleteAccount(code){
+    // удалить фото пользователя
+    try{
+      const {data,error}=await supabase.storage.from('photos').list('',{search:code});
+      if(data) for(const f of data){ await supabase.storage.from('photos').remove([f.name]); }
+    }catch(e){console.error("Ошибка удаления фото:",e);}
+    delete users[code];
+    posts=posts.filter(p=>p.ownerCode!==code);
+    saveData(); renderUsersList();
+  }
 
-        if (users[loginCode]) {
-          savedCode = loginCode;
-          savedName = users[loginCode].name;
-          enterUser();
-        } else {
-          document.getElementById("logMessage").innerText = "קוד שגוי!";
-        }
-      } catch (err) {
-        console.error("❌ Ошибка в login():", err);
-      }
+  document.getElementById("clearAll").addEventListener("click", ()=>{
+    if(confirm("למחוק את כל הפוסטים?")){
+      posts=[]; saveData(); alert("כל הפוסטים נמחקו!");
     }
+  });
 
-    // ======== Вход пользователя ========
-    function enterUser() {
-      document.getElementById("loginBox").style.display = "none";
-      document.getElementById("welcomeBox").style.display = "block";
-      document.getElementById("welcomeText").innerText = "ברוך הבא, " + savedName + "!";
-      startCamera();
-    }
+  // ===== buttons =====
+  document.getElementById("registerBtn").onclick=register;
+  document.getElementById("continueBtn").onclick=continueToLogin;
+  document.getElementById("loginBtn").onclick=login;
+  document.getElementById("logoutBtn").onclick=logout;
+  document.getElementById("copyCodeBtn").onclick=()=>{
+    navigator.clipboard.writeText(document.getElementById("generatedCode").innerText)
+      .then(()=>alert("הקוד הועתק!"));
+  };
 
-    // ======== Выход ========
-    function logout() {
-      document.getElementById("welcomeBox").style.display = "none";
-      document.getElementById("adminBox").style.display = "none";
-      document.getElementById("registerBox").style.display = "block";
-      document.getElementById("showCodeBox").style.display = "none";
-      document.getElementById("nickname").value = "";
-      savedCode = "";
-      savedName = "";
-    }
-
-    // ======== Камера ========
-    function startCamera() {
-      const video = document.getElementById('camera');
-      navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
-        .then(stream => { video.srcObject = stream; })
-        .catch(err => {
-          console.warn('⚠ שגיאה במצלמה:', err);
-          alert("אין גישה למצלמה — בדוק הרשאות.");
-        });
-    }
-
-    // ======== Захват фото ========
-    document.getElementById("capture").addEventListener("click", () => {
-      const video = document.getElementById('camera');
-      const canvas = document.getElementById('photo');
-      const preview = document.getElementById('preview');
-      try {
-        const ctx = canvas.getContext('2d');
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        preview.src = canvas.toDataURL('image/png');
-        preview.style.display = 'block';
-      } catch (err) {
-        console.error("❌ Ошибка при съёмке:", err);
-      }
-    });
-
-    // ======== Копирование кода ========
-    document.getElementById("copyCodeBtn").addEventListener("click", () => {
-      const codeEl = document.getElementById("generatedCode");
-      navigator.clipboard.writeText(codeEl.innerText)
-        .then(() => alert("הקוד הועתק!"))
-        .catch(err => alert("לא ניתן להעתיק קוד"));
-    });
-
-    //
+</script>
+</body>
+</html>
