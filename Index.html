@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="he">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>schooltrade</title>
+  <style>
+    body { font-family: 'Arial', sans-serif; background: linear-gradient(135deg,#f0f4ff,#d9e7ff); text-align:center; direction:rtl; margin-bottom:220px; color:#222; }
+    .box { background:#fff; padding:20px; margin:20px auto; border-radius:14px; box-shadow:0 4px 12px rgba(0,0,0,0.1); max-width:420px; }
+    input, textarea { width:90%; padding:10px; margin:8px 0; border-radius:8px; border:1px solid #ccc; text-align:center; font-size:15px; }
+    button { padding:10px 16px; border:none; background:#0078ff; color:white; border-radius:8px; cursor:pointer; margin:6px; font-weight:bold; transition:0.3s; }
+    button:hover { background:#005fcc; }
+    video, canvas, img { width:100%; max-width:360px; border-radius:10px; margin-top:10px; }
+    .post { background:#fff; margin:10px auto; padding:10px; border-radius:10px; box-shadow:0 0 6px rgba(0,0,0,0.06); max-width:380px; text-align:right; }
+    .comment-section { margin-top:10px; background:#f8faff; border-radius:8px; padding:6px; }
+    .comment { text-align:right; border-bottom:1px solid #eee; padding:4px 0; font-size:14px; }
+    .comment-input { display:flex; justify-content:space-between; margin-top:6px; }
+    .comment-input input { width:75%; padding:6px; border-radius:6px; border:1px solid #ccc; }
+    .comment-input button { width:20%; font-size:13px; padding:6px; }
+    #regMessage { min-height:20px; margin-top:6px; color:#0a7a00; font-weight:bold; }
+    #createPost { position:fixed; bottom:0; left:0; right:0; background:#fff; box-shadow:0 -2px 12px rgba(0,0,0,0.08); padding:8px; border-top:1px solid #ddd; max-width:420px; margin:0 auto; text-align:center; }
+    #togglePostBox { width:95%; padding:8px; border:none; background:#0078ff; color:white; border-radius:8px; cursor:pointer; }
+    #togglePostBox:hover { background:#005fcc; }
+    #allPosts { margin-bottom:120px; }
+  </style>
+</head>
+<body>
+
+<!-- регистрация -->
+<div class="box" id="registerBox">
+  <h2>הרשמה</h2>
+  <input type="text" id="nickname" placeholder="הכנס שם ושם משפחה שלך">
+  <button id="registerBtn">הירשם</button>
+  <div id="regMessage"></div>
+  <div id="showCodeBox" style="display:none;">
+    <p>הקוד שלך:</p>
+    <h3 id="generatedCode"></h3>
+    <button id="copyCodeBtn">העתק קוד</button>
+    <p>שמור את הקוד — תצטרך אותו כדי להתחבר!</p>
+    <button id="continueBtn">המשך</button>
+  </div>
+</div>
+
+<!-- вход -->
+<div class="box" id="loginBox" style="display:none;">
+  <h2>התחברות</h2>
+  <input type="text" id="loginCode" placeholder="הכנס את הקוד">
+  <button id="loginBtn">התחבר</button>
+  <div id="logMessage"></div>
+</div>
+
+<!-- приветствие + камера -->
+<div class="box" id="welcomeBox" style="display:none;">
+  <h2 id="welcomeText"></h2>
+  <video id="camera" autoplay playsinline></video><br>
+  <button id="capture">📸 צלם תמונה</button>
+  <canvas id="photo" style="display:none;"></canvas>
+  <img id="preview" style="display:none;"><br>
+  <button id="logoutBtn">🔒 התנתק</button>
+</div>
+
+<!-- все посты -->
+<div id="allPosts" style="display:none;">
+  <h2>🖼️ פוסטים של משתמשים</h2>
+  <div id="postsList"></div>
+</div>
+
+<!-- блок публикации -->
+<div id="createPost" style="display:none;">
+  <button id="togglePostBox">✏️ פרסם פוסט</button>
+  <div id="postBox" style="display:none; margin-top:10px;">
+    <textarea id="description" placeholder="כתוב תיאור או מקום מפגש"></textarea><br>
+    <input type="number" id="price" placeholder="מחיר (₪)"><br>
+    <button id="savePostBtn">📤 פרסם</button>
+  </div>
+</div>
+
+<!-- панель администратора -->
+<div id="adminPanel" style="display:none;" class="box">
+  <h2>⚙️ ניהול מנהל</h2>
+  <h3>רשימת חשבונות</h3>
+  <div id="usersList"></div>
+  <hr>
+  <button id="clearAllBtn">🗑️ מחק את כל הפוסטים</button>
+</div>
+
+<!-- Supabase -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/supabase.min.js"></script>
+<script>
+const SUPABASE_URL = 'https://fxskzfjezoolsgqytumw.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ4c2t6Zmplem9vbHNncXl0dW13Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEwNTkzODksImV4cCI6MjA3NjYzNTM4OX0.MYIWkWhdVNzlqs53l4a4eJXQJeJpf0d3kQQCDN-zrI';
+const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let savedCode="", savedName="", isAdmin=false;
+
+// Регистрация
+document.getElementById("registerBtn").onclick = async () => {
+  const nickname = document.getElementById("nickname").value.trim();
+  if(!nickname){ document.getElementById("regMessage").innerText="אנא הכנס שם משתמש"; return; }
+  let code = Math.floor(100000000+Math.random()*900000000).toString();
+  await supabase.from('users').insert([{code,name:nickname}]);
+  savedCode=code; savedName=nickname;
+  document.getElementById("generatedCode").innerText=code;
+  document.getElementById("showCodeBox").style.display="block";
+  document.getElementById("regMessage").innerText="נרשמת בהצלחה — שמור את הקוד!";
+};
+
+// Продолжить
+document.getElementById("continueBtn").onclick = ()=>{
+  document.getElementById("registerBox").style.display="none";
+  document.getElementById("loginBox").style.display="block";
+};
+
+// Вход
+document.getElementById("loginBtn").onclick=async()=>{
+  const loginCode=document.getElementById("loginCode").value.trim();
+  document.getElementById("logMessage").innerText="";
+  if(loginCode==="admin"||loginCode==="michaelrodov"){savedCode=loginCode;savedName=loginCode;isAdmin=true;enterUser(); return;}
+  const {data,error} = await supabase.from("users").select("*").eq("code",loginCode).single();
+  if(error||!data){document.getElementById("logMessage").innerText="קוד שגוי!"; return;}
+  savedCode=loginCode; savedName=data.name; isAdmin=false; enterUser();
+};
+
+function enterUser(){
+  document.getElementById("loginBox").style.display="none";
+  document.getElementById("welcomeBox").style.display="block";
+  document.getElementById("allPosts").style.display="block";
+  document.getElementById("createPost").style.display=isAdmin?"none":"block";
+  document.getElementById("adminPanel").style.display=isAdmin?"block":"none";
+  document.getElementById("welcomeText").innerText="ברוך הבא, "+savedName+"!";
+  if(!isAdmin) startCamera();
+  showPosts(); if(isAdmin) showUsersList();
+}
+
+// Выход
+document.getElementById("logoutBtn").onclick=()=>{document.getElementById("welcomeBox").style.display="none";document.getElementById("registerBox").style.display="block";document.getElementById("showCodeBox").style.display="none";document.getElementById("loginCode").value="";savedCode="";savedName="";isAdmin=false;};
+
+// Камера
+function startCamera(){navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}}).then(stream=>document.getElementById("camera").srcObject=stream).catch(err=>console.warn("שגיאה במצלמה:",err));}
+
+// Фото
+document.getElementById("capture").onclick=()=>{
+  const video=document.getElementById("camera"),canvas=document.getElementById("photo"),preview=document.getElementById("preview");
+  canvas.width=video.videoWidth;canvas.height=video.videoHeight;
+  canvas.getContext("2d").drawImage(video,0,0,canvas.width,canvas.height);
+  preview.src=canvas.toDataURL("image/png");preview.style.display="block";
+};
+
+// Создание поста
+document.getElementById("savePostBtn").onclick=async()=>{
+  if(!savedCode||isAdmin){alert("רק משתמשים רגילים יכולים לפרסם"); return;}
+  const photo=document.getElementById("preview").src,desc=document.getElementById("description").value.trim(),price=document.getElementById("price").value.trim();
+  if(!photo||!desc){alert("צריך תיאור ותמונה!"); return;}
+  await supabase.from("posts").insert([{ownerCode:savedCode,name:savedName,desc,price,photo,comments:[],created_at:new Date().toISOString()}]);
+  document.getElementById("description").value=""; document.getElementById("price").value=""; document.getElementById("preview").style.display="none";
+  showPosts();
+};
+
+// Показ постов
+async function showPosts(){
+  const {data,error}=await supabase.from("posts").select("*").order("created_at",{ascending:false});
