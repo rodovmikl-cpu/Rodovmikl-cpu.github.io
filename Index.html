@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="he">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>schooltrade</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" href="data:,"> <!-- пустой favicon чтобы не было 404 -->
+</head>
+<body>
+
+  <!-- регистрация -->
+  <div class="box" id="registerBox">
+    <h2>הרשמה</h2>
+    <input type="text" id="nickname" placeholder="הכנס שם ושם משפחה שלך">
+    <button id="registerBtn">הירשם</button>
+    <div id="regMessage"></div>
+
+    <div id="showCodeBox" style="display:none;">
+      <p>הקוד שלך:</p>
+      <h3 id="generatedCode"></h3>
+      <button id="copyCodeBtn">העתק קוד</button>
+      <p>שמור את הקוד — תצטרך אותו כדי להתחבר!</p>
+      <button id="continueBtn">המשך</button>
+    </div>
+  </div>
+
+  <!-- вход -->
+  <div class="box" id="loginBox" style="display:none;">
+    <h2>התחברות</h2>
+    <input type="text" id="loginCode" placeholder="הכנס את הקוד">
+    <button id="loginBtn">התחבר</button>
+    <div id="logMessage"></div>
+  </div>
+
+  <!-- приветствие + камера -->
+  <div class="box" id="welcomeBox" style="display:none;">
+    <h2 id="welcomeText"></h2>
+    <video id="camera" autoplay playsinline></video><br>
+    <button id="capture">📸 צלם תמונה</button>
+    <canvas id="photo" style="display:none;"></canvas>
+    <img id="preview" style="display:none;"><br>
+    <button id="logoutBtn">🔒 התנתק</button>
+  </div>
+
+  <!-- все посты -->
+  <div id="allPosts" style="display:none;">
+    <h2>🖼️ פוסטים של משתמשים</h2>
+    <div id="postsList"></div>
+  </div>
+
+  <!-- блок публикации -->
+  <div id="createPost" style="display:none;">
+    <button id="togglePostBox">✏️ פרסם פוסט</button>
+    <div id="postBox" style="display:none; margin-top:10px;">
+      <textarea id="description" placeholder="כתוב תיאור או מקום מפגש"></textarea><br>
+      <input type="number" id="price" placeholder="מחיר (₪)"><br>
+      <button id="savePostBtn">📤 פרסם</button>
+    </div>
+  </div>
+
+  <!-- панель администратора -->
+  <div id="adminPanel" style="display:none;" class="box">
+    <h2>⚙️ ניהול מנהל</h2>
+    <h3>רשימת חשבונות</h3>
+    <div id="usersList"></div>
+    <hr>
+    <button id="clearAllBtn">🗑️ מחק את כל הפוסטים</button>
+  </div>
+
+  <!-- Supabase JS SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/supabase.min.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
