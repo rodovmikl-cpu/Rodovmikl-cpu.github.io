@@ -1,250 +1,174 @@
 <!DOCTYPE html>
-<html lang="he">
+<html lang="he" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>schooltrade</title>
-  <style>
-    body {
-      font-family: 'Arial', sans-serif;
-      background: linear-gradient(135deg, #f0f4ff, #d9e7ff);
-      text-align: center;
-      direction: rtl;
-      margin-bottom: 220px;
-      color: #222;
-    }
-    .box {
-      background: #ffffff;
-      padding: 20px;
-      margin: 20px auto;
-      border-radius: 14px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-      max-width: 420px;
-      transition: transform 0.2s ease;
-    }
-    .box:hover { transform: scale(1.01); }
-    input, textarea {
-      width: 90%; padding: 10px; margin: 8px 0;
-      border-radius: 8px; border: 1px solid #ccc; text-align: center;
-      font-size: 15px;
-    }
-    button {
-      padding: 10px 16px; border: none; background: #0078ff;
-      color: white; border-radius: 8px; cursor: pointer; margin: 6px;
-      font-weight: bold; transition: 0.3s;
-    }
-    button:hover { background: #005fcc; }
-    video, canvas, img { width: 100%; max-width: 360px; border-radius: 10px; margin-top: 10px; }
-    #allPosts { margin-bottom: 120px; }
-    #createPost {
-      position: fixed; bottom: 0; left: 0; right: 0; background: #fff;
-      box-shadow: 0 -2px 12px rgba(0,0,0,0.08);
-      padding: 8px; border-top: 1px solid #ddd;
-      max-width: 420px; margin: 0 auto; text-align: center;
-    }
-    #togglePostBox {
-      width: 95%; padding: 8px; background: #0078ff;
-      color: white; border-radius: 8px; cursor: pointer;
-    }
-    #togglePostBox:hover { background: #005fcc; }
-    .post {
-      background: #fff; margin: 10px auto; padding: 10px;
-      border-radius: 10px; box-shadow: 0 0 6px rgba(0,0,0,0.06);
-      max-width: 380px; text-align: right;
-    }
-    #regMessage { min-height: 20px; margin-top: 6px; color: #0a7a00; font-weight: bold; }
-  </style>
-
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.43.4/dist/umd/supabase.min.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>schooltrade</title>
+<style>
+body {
+  font-family: 'Arial', sans-serif;
+  background: linear-gradient(135deg, #f0f4ff, #d9e7ff);
+  text-align: center;
+  direction: rtl;
+  margin-bottom: 220px;
+  color: #222;
+}
+.box {
+  background: #ffffff;
+  padding: 20px;
+  margin: 20px auto;
+  border-radius: 14px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  max-width: 420px;
+  transition: transform 0.2s ease;
+}
+.box:hover { transform: scale(1.01); }
+input, textarea {
+  width: 90%;
+  padding: 10px;
+  margin: 8px 0;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  text-align: center;
+  font-size: 15px;
+}
+button {
+  padding: 10px 16px;
+  border: none;
+  background: #0078ff;
+  color: white;
+  border-radius: 8px;
+  cursor: pointer;
+  margin: 6px;
+  font-weight: bold;
+  transition: 0.3s;
+}
+button:hover { background: #005fcc; }
+video, canvas, img { width: 100%; max-width: 360px; border-radius: 10px; margin-top: 10px; }
+#allPosts { margin-bottom: 120px; }
+#createPost {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #fff;
+  box-shadow: 0 -2px 12px rgba(0,0,0,0.08);
+  padding: 8px;
+  border-top: 1px solid #ddd;
+  max-width: 420px;
+  margin: 0 auto;
+  text-align: center;
+}
+#togglePostBox { width: 95%; padding: 8px; background: #0078ff; color:white; border-radius:8px; cursor:pointer; }
+#togglePostBox:hover { background:#005fcc; }
+.post { background:#fff; margin:10px auto; padding:10px; border-radius:10px; box-shadow:0 0 6px rgba(0,0,0,0.06); max-width:380px; text-align:right; }
+.post img { width:100%; border-radius:8px; }
+.comment-section { margin-top:10px; background:#f8faff; border-radius:8px; padding:6px; }
+.comment { text-align:right; border-bottom:1px solid #eee; padding:4px 0; font-size:14px; }
+.comment-input { display:flex; justify-content:space-between; margin-top:6px; }
+.comment-input input { width:75%; padding:6px; border-radius:6px; border:1px solid #ccc; }
+.comment-input button { width:20%; font-size:13px; padding:6px; }
+#regMessage { min-height:20px; margin-top:6px; color:#0a7a00; font-weight:bold; }
+.user-row { display:flex; justify-content:space-between; align-items:center; margin:4px 0; }
+.user-delete { background:#ff4d4f; color:white; padding:4px 8px; border-radius:4px; cursor:pointer; }
+.user-delete:hover { background:#cc0000; }
+</style>
 </head>
 <body>
 
-  <div class="box" id="registerBox">
-    <h2>הרשמה</h2>
-    <input type="text" id="nickname" placeholder="הכנס שם שלך">
-    <button id="registerBtn">הירשם</button>
-    <div id="regMessage"></div>
+<div class="box" id="registerBox">
+<h2>הרשמה</h2>
+<input type="text" id="nickname" placeholder="הכנס שם ושם משפחה שלך">
+<button id="registerBtn">הירשם</button>
+<div id="regMessage"></div>
+<div id="showCodeBox" style="display:none;">
+<p>הקוד שלך:</p>
+<h3 id="generatedCode"></h3>
+<button id="copyCodeBtn">העתק קוד</button>
+<p>שמור את הקוד — תצטרך אותו כדי להתחבר!</p>
+<button id="continueBtn">המשך</button>
+</div>
+</div>
 
-    <div id="showCodeBox" style="display:none;">
-      <p>הקוד שלך:</p>
-      <h3 id="generatedCode"></h3>
-      <button id="copyCodeBtn">העתק קוד</button>
-      <p>שמור את הקוד — תצטרך אותו כדי להתחבר!</p>
-      <button id="continueBtn">המשך</button>
-    </div>
-  </div>
+<div class="box" id="loginBox" style="display:none;">
+<h2>התחברות</h2>
+<input type="text" id="loginCode" placeholder="הכנס את הקוד">
+<button id="loginBtn">התחבר</button>
+<div id="logMessage"></div>
+</div>
 
-  <div class="box" id="loginBox" style="display:none;">
-    <h2>התחברות</h2>
-    <input type="text" id="loginCode" placeholder="הכנס את הקוד">
-    <button id="loginBtn">התחבר</button>
-    <div id="logMessage"></div>
-  </div>
+<div class="box" id="welcomeBox" style="display:none;">
+<h2 id="welcomeText"></h2>
+<video id="camera" autoplay playsinline></video><br>
+<button id="capture">📸 צלם תמונה</button>
+<canvas id="photo" style="display:none;"></canvas>
+<img id="preview" alt="תצוגה מקדימה" style="display:none;"><br>
+<button id="logoutBtn">🔒 התנתק</button>
+</div>
 
-  <div class="box" id="welcomeBox" style="display:none;">
-    <h2 id="welcomeText"></h2>
-    <video id="camera" autoplay playsinline></video><br>
-    <button id="capture">📸 צלם תמונה</button>
-    <canvas id="photo" style="display:none;"></canvas>
-    <img id="preview" alt="תצוגה מקדימה" style="display:none;"><br>
-    <button id="logoutBtn">🔒 התנתק</button>
-  </div>
+<div id="allPosts" style="display:none;">
+<h2>🖼 פוסטים של משתמשים</h2>
+<div id="postsList"></div>
+</div>
 
-  <div id="allPosts" style="display:none;">
-    <h2>🖼 פוסטים של משתמשים</h2>
-    <div id="postsList"></div>
-  </div>
+<div id="createPost" style="display:none;">
+<button id="togglePostBox">✏ פרסם פוסט</button>
+<div id="postBox" style="display:none; margin-top:10px;">
+<textarea id="description" placeholder="כתוב תיאור או מקום מפגש"></textarea><br>
+<input type="number" id="price" placeholder="מחיר (₪)"><br>
+<button id="savePostBtn">📤 פרסם</button>
+</div>
+</div>
 
-  <div id="createPost" style="display:none;">
-    <button id="togglePostBox">✏ פרסם פוסט</button>
-    <div id="postBox" style="display:none; margin-top:10px;">
-      <textarea id="description" placeholder="כתוב תיאור או מקום מפגש"></textarea><br>
-      <input type="number" id="price" placeholder="מחיר (₪)"><br>
-      <button id="savePostBtn">📤 פרסם</button>
-    </div>
-  </div>
+<div id="adminPanel" style="display:none;" class="box">
+<h2>⚙ ניהול מנהל</h2>
+<h3>רשימת חשבונות</h3>
+<div id="usersList"></div>
+<hr>
+<button id="clearAllBtn">🗑 מחק את כל הפוסטים</button>
+</div>
 
-  <div id="adminPanel" style="display:none;" class="box">
-    <h2>⚙ ניהול מנהל</h2>
-    <div id="usersList"></div>
-    <button id="clearAllBtn">🗑 מחק את כל הפוסטים</button>
-  </div>
+<script>
+let users = {}; 
+let posts = [];
+let savedCode = "", savedName = "";
 
-  <script>
-    const supabase = window.supabase.createClient(
-      'https://fxskzfjezoolsgqytumw.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ4c2t6Zmplem9vbHNncXl0dW13Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEwNTkzODksImV4cCI6MjA3NjYzNTM4OX0.MYIWkWhdVNzlqs53l4a4eJXQJeJpf0bD3kQQCDN-zrI'
-    );
+function saveData(){ localStorage.setItem("users", JSON.stringify(users)); localStorage.setItem("posts", JSON.stringify(posts)); }
+function register(){
+  const nickname = document.getElementById("nickname").value.trim();
+  if(!nickname){ document.getElementById("regMessage").innerText="אנא הכנס שם משתמש"; return; }
+  let code; do{ code=Math.floor(100000000+Math.random()*900000000).toString(); }while(users[code]);
+  users[code]={name:nickname}; saveData();
+  savedName=nickname; savedCode=code;
+  document.getElementById("generatedCode").innerText=code;
+  document.getElementById("showCodeBox").style.display="block";
+  document.getElementById("regMessage").innerText="נרשמת בהצלחה — שמור את הקוד!";
+}
+document.getElementById("continueBtn").addEventListener("click",()=>{ document.getElementById("registerBox").style.display="none"; document.getElementById("loginBox").style.display="block"; });
+document.getElementById("registerBtn").addEventListener("click",register);
 
-    let savedCode = "", savedName = "";
+function login(){
+  const loginCode=document.getElementById("loginCode").value.trim();
+  document.getElementById("logMessage").innerText="";
+  if(loginCode==="admin"||loginCode==="michaelrodov"){ savedCode=loginCode; savedName=loginCode; enterUser(true); return; }
+  if(users[loginCode]){ savedCode=loginCode; savedName=users[loginCode].name; enterUser(false); }
+  else document.getElementById("logMessage").innerText="קוד שגוי!";
+}
+document.getElementById("loginBtn").addEventListener("click",login);
 
-    // === הרשמה ===
-    async function register() {
-      const nickname = document.getElementById("nickname").value.trim();
-      if (!nickname) return alert("אנא הכנס שם");
+function enterUser(isAdmin){
+  document.getElementById("loginBox").style.display="none";
+  document.getElementById("registerBox").style.display="none";
+  document.getElementById("welcomeBox").style.display="block";
+  document.getElementById("allPosts").style.display="block";
+  document.getElementById("createPost").style.display=isAdmin?"none":"block";
+  document.getElementById("welcomeText").innerText="ברוך הבא, "+savedName+"!";
+  document.getElementById("adminPanel").style.display=isAdmin?"block":"none";
+  if(!isAdmin) startCamera();
+  showPosts();
+  if(isAdmin) showUsersList();
+}
+document.getElementById("logoutBtn").addEventListener("click",()=>{ logout(); });
 
-      const code = Math.floor(100000000 + Math.random() * 900000000).toString();
-      const { error } = await supabase.from('users').insert([{ code, name: nickname }]);
-      if (error) {
-        alert("שגיאה בהרשמה: " + error.message);
-        return;
-      }
-
-      savedCode = code;
-      savedName = nickname;
-      document.getElementById("generatedCode").innerText = code;
-      document.getElementById("showCodeBox").style.display = "block";
-      document.getElementById("regMessage").innerText = "נרשמת בהצלחה!";
-    }
-
-    // === כניסה ===
-    async function login() {
-      const code = document.getElementById("loginCode").value.trim();
-      if (!code) return;
-
-      if (code === "admin" || code === "michaelrodov") {
-        savedCode = code;
-        savedName = code;
-        enterUser(true);
-        return;
-      }
-
-      const { data, error } = await supabase.from('users').select('*').eq('code', code).maybeSingle();
-      if (error || !data) return alert("קוד שגוי!");
-
-      savedCode = data.code;
-      savedName = data.name;
-      enterUser(false);
-    }
-
-    // === פוסטים ===
-    async function savePost() {
-      if (!savedCode) return alert("התחבר קודם!");
-      const photo = document.getElementById("preview").src;
-      const desc = document.getElementById("description").value;
-      const price = document.getElementById("price").value;
-
-      const { error } = await supabase.from('posts').insert([{ usercode: savedCode, name: savedName, desc, price, photo }]);
-      if (error) return alert("שגיאה בפרסום: " + error.message);
-      document.getElementById("description").value = "";
-      document.getElementById("price").value = "";
-      document.getElementById("preview").style.display = "none";
-      showPosts();
-    }
-
-    async function showPosts() {
-      const { data, error } = await supabase.from('posts').select('*');
-      const list = document.getElementById("postsList");
-      list.innerHTML = "";
-
-      if (error) {
-        list.innerHTML = "<p>שגיאה בטעינת פוסטים.</p>";
-        return;
-      }
-
-      if (!data || data.length === 0) {
-        list.innerHTML = "<p>אין עדיין פוסטים.</p>";
-        return;
-      }
-
-      data.reverse().forEach(p => {
-        const canDelete = savedCode === "admin" || p.usercode === savedCode;
-        list.innerHTML += `
-          <div class="post">
-            ${p.photo ? <img src="${p.photo}"> : ""}
-            <h4>${p.name}</h4>
-            <p>${p.desc}</p>
-            <p>💰 ${p.price || "ללא מחיר"}</p>
-            ${canDelete ? <button onclick="deletePost('${p.id}')">❌ מחק</button> : ""}
-          </div>`;
-      });
-    }
-
-    async function deletePost(id) {
-      if (!confirm("למחוק את הפוסט?")) return;
-      await supabase.from('posts').delete().eq('id', id);
-      showPosts();
-    }
-
-    function enterUser(isAdmin) {
-      document.getElementById("registerBox").style.display = "none";
-      document.getElementById("loginBox").style.display = "none";
-      document.getElementById("welcomeBox").style.display = "block";
-      document.getElementById("allPosts").style.display = "block";
-      document.getElementById("createPost").style.display = isAdmin ? "none" : "block";
-      document.getElementById("adminPanel").style.display = isAdmin ? "block" : "none";
-      document.getElementById("welcomeText").innerText = "ברוך הבא " + savedName;
-      showPosts();
-    }
-
-    // === מצלמה ===
-    const video = document.getElementById("camera");
-    const canvas = document.getElementById("photo");
-    const img = document.getElementById("preview");
-
-    navigator.mediaDevices.getUserMedia({ video: true })
-      .then(stream => { video.srcObject = stream; })
-      .catch(err => console.error("Camera error:", err));
-
-    document.getElementById("capture").onclick = () => {
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      canvas.getContext('2d').drawImage(video, 0, 0);
-      img.src = canvas.toDataURL("image/png");
-      img.style.display = "block";
-    };
-
-    document.getElementById("registerBtn").onclick = register;
-    document.getElementById("loginBtn").onclick = login;
-    document.getElementById("savePostBtn").onclick = savePost;
-    document.getElementById("copyCodeBtn").onclick = () => {
-      navigator.clipboard.writeText(savedCode);
-      alert("הקוד הועתק!");
-    };
-    document.getElementById("continueBtn").onclick = () => {
-      document.getElementById("registerBox").style.display = "none";
-      document.getElementById("loginBox").style.display = "block";
-    };
-  </script>
-</body>
-</html>
+function logout(){
+  document.getElementById("welcomeBox").style.display="none
