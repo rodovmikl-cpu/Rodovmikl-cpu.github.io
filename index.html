@@ -24,80 +24,45 @@
     }
     .box:hover { transform: scale(1.01); }
     input, textarea {
-      width: 90%;
-      padding: 10px;
-      margin: 8px 0;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-      text-align: center;
+      width: 90%; padding: 10px; margin: 8px 0;
+      border-radius: 8px; border: 1px solid #ccc; text-align: center;
       font-size: 15px;
     }
     button {
-      padding: 10px 16px;
-      border: none;
-      background: #0078ff;
-      color: white;
-      border-radius: 8px;
-      cursor: pointer;
-      margin: 6px;
-      font-weight: bold;
-      transition: 0.3s;
+      padding: 10px 16px; border: none; background: #0078ff;
+      color: white; border-radius: 8px; cursor: pointer; margin: 6px;
+      font-weight: bold; transition: 0.3s;
     }
     button:hover { background: #005fcc; }
-    video, canvas, img {
-      width: 100%;
-      max-width: 360px;
-      border-radius: 10px;
-      margin-top: 10px;
-    }
+    video, canvas, img { width: 100%; max-width: 360px; border-radius: 10px; margin-top: 10px; }
     #allPosts { margin-bottom: 120px; }
     #createPost {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background: #fff;
+      position: fixed; bottom: 0; left: 0; right: 0; background: #fff;
       box-shadow: 0 -2px 12px rgba(0,0,0,0.08);
-      padding: 8px;
-      border-top: 1px solid #ddd;
-      max-width: 420px;
-      margin: 0 auto;
-      text-align: center;
+      padding: 8px; border-top: 1px solid #ddd;
+      max-width: 420px; margin: 0 auto; text-align: center;
     }
     #togglePostBox {
-      width: 95%;
-      padding: 8px;
-      border: none;
-      background: #0078ff;
-      color: white;
-      border-radius: 8px;
-      cursor: pointer;
+      width: 95%; padding: 8px; background: #0078ff;
+      color: white; border-radius: 8px; cursor: pointer;
     }
     #togglePostBox:hover { background: #005fcc; }
     .post {
-      background: #fff;
-      margin: 10px auto;
-      padding: 10px;
-      border-radius: 10px;
-      box-shadow: 0 0 6px rgba(0,0,0,0.06);
-      max-width: 380px;
-      text-align: right;
+      background: #fff; margin: 10px auto; padding: 10px;
+      border-radius: 10px; box-shadow: 0 0 6px rgba(0,0,0,0.06);
+      max-width: 380px; text-align: right;
     }
-    .post img { width: 100%; border-radius: 8px; }
-    #regMessage {
-      min-height: 20px;
-      margin-top: 6px;
-      color: #0a7a00;
-      font-weight: bold;
-    }
+    #regMessage { min-height: 20px; margin-top: 6px; color: #0a7a00; font-weight: bold; }
   </style>
+
+  <!-- Подключаем Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
-  <!-- регистрация -->
   <div class="box" id="registerBox">
     <h2>הרשמה</h2>
-    <input type="text" id="nickname" placeholder="הכנס שם ושם משפחה שלך">
+    <input type="text" id="nickname" placeholder="הכנס שם שלך">
     <button id="registerBtn">הירשם</button>
     <div id="regMessage"></div>
 
@@ -110,7 +75,6 @@
     </div>
   </div>
 
-  <!-- вход -->
   <div class="box" id="loginBox" style="display:none;">
     <h2>התחברות</h2>
     <input type="text" id="loginCode" placeholder="הכנס את הקוד">
@@ -118,7 +82,6 @@
     <div id="logMessage"></div>
   </div>
 
-  <!-- приветствие -->
   <div class="box" id="welcomeBox" style="display:none;">
     <h2 id="welcomeText"></h2>
     <video id="camera" autoplay playsinline></video><br>
@@ -128,13 +91,11 @@
     <button id="logoutBtn">🔒 התנתק</button>
   </div>
 
-  <!-- все посты -->
   <div id="allPosts" style="display:none;">
     <h2>🖼 פוסטים של משתמשים</h2>
     <div id="postsList"></div>
   </div>
 
-  <!-- публикация -->
   <div id="createPost" style="display:none;">
     <button id="togglePostBox">✏ פרסם פוסט</button>
     <div id="postBox" style="display:none; margin-top:10px;">
@@ -144,93 +105,145 @@
     </div>
   </div>
 
-  <!-- Supabase -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <div id="adminPanel" style="display:none;" class="box">
+    <h2>⚙ ניהול מנהל</h2>
+    <h3>רשימת חשבונות</h3>
+    <div id="usersList"></div>
+    <hr>
+    <button id="clearAllBtn">🗑 מחק את כל הפוסטים</button>
+  </div>
+
   <script>
-    // === Настройки Supabase ===
-    const SUPABASE_URL = "https://fxskzfjezoolsgqytumw.supabase.co";
-    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ4c2t6Zmplem9vbHNncXl0dW13Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEwNTkzODksImV4cCI6MjA3NjYzNTM4OX0.MYIWkWhdVNzlqs53l4a4eJXQJeJpf0bD3kQQCDN-zrI";
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    const supabase = window.supabase.createClient(
+      'https://fxskzfjezoolsgqytumw.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ4c2t6Zmplem9vbHNncXl0dW13Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEwNTkzODksImV4cCI6MjA3NjYzNTM4OX0.MYIWkWhdVNzlqs53l4a4eJXQJeJpf0bD3kQQCDN-zrI'
+    );
 
     let savedCode = "", savedName = "";
 
-    // === регистрация ===
+    // === הרשמה ===
     async function register() {
       const nickname = document.getElementById("nickname").value.trim();
-      if (!nickname) return alert("אנא הכנס שם משתמש");
+      if (!nickname) return alert("אנא הכנס שם");
+
       const code = Math.floor(100000000 + Math.random() * 900000000).toString();
 
-      const { error } = await supabase.from("users").insert([{ code, name: nickname }]);
-      if (error) return alert("שגיאה בשמירה: " + error.message);
-
-      savedCode = code; savedName = nickname;
-      document.getElementById("generatedCode").innerText = code;
-      document.getElementById("showCodeBox").style.display = "block";
-      document.getElementById("regMessage").innerText = "נרשמת בהצלחה — שמור את הקוד!";
-    }
-
-    function continueToLogin() {
-      document.getElementById("registerBox").style.display = "none";
-      document.getElementById("loginBox").style.display = "block";
-    }
-
-    async function login() {
-      const loginCode = document.getElementById("loginCode").value.trim();
-      if (loginCode === "admin" || loginCode === "michaelrodov") {
-        enterUser(true, loginCode);
+      const { error } = await supabase.from('users').insert([{ code, name: nickname }]);
+      if (error) {
+        alert("שגיאה בהרשמה: " + error.message);
         return;
       }
-      const { data } = await supabase.from("users").select().eq("code", loginCode).maybeSingle();
-      if (!data) return alert("קוד שגוי!");
-      enterUser(false, data.name, loginCode);
+
+      savedCode = code;
+      savedName = nickname;
+      document.getElementById("generatedCode").innerText = code;
+      document.getElementById("showCodeBox").style.display = "block";
+      document.getElementById("regMessage").innerText = "נרשמת בהצלחה!";
     }
 
-    async function enterUser(isAdmin, name, code) {
-      savedName = name; savedCode = code;
-      document.getElementById("loginBox").style.display = "none";
-      document.getElementById("welcomeBox").style.display = "block";
-      document.getElementById("allPosts").style.display = "block";
-      document.getElementById("createPost").style.display = isAdmin ? "none" : "block";
-      document.getElementById("welcomeText").innerText = "ברוך הבא, " + name;
-      if (!isAdmin) showPosts();
+    // === כניסה ===
+    async function login() {
+      const code = document.getElementById("loginCode").value.trim();
+      if (!code) return;
+
+      if (code === "admin" || code === "michaelrodov") {
+        savedCode = code;
+        savedName = code;
+        enterUser(true);
+        return;
+      }
+
+      const { data, error } = await supabase.from('users').select().eq('code', code).single();
+      if (error || !data) return alert("קוד שגוי!");
+
+      savedCode = data.code;
+      savedName = data.name;
+      enterUser(false);
     }
 
+    // === שמירת פוסט ===
     async function savePost() {
-      const desc = document.getElementById("description").value.trim();
-      const price = document.getElementById("price").value.trim();
-      if (!desc) return alert("צריך תיאור!");
-      const { error } = await supabase.from("posts").insert([{ usercode: savedCode, name: savedName, desc, price }]);
-      if (error) alert("שגיאה בפרסום: " + error.message);
+      if (!savedCode) return alert("התחבר קודם!");
+      const photo = document.getElementById("preview").src;
+      const desc = document.getElementById("description").value;
+      const price = document.getElementById("price").value;
+
+      const { error } = await supabase.from('posts').insert([{ usercode: savedCode, name: savedName, desc, price, photo }]);
+      if (error) return alert("שגיאה בפרסום: " + error.message);
       document.getElementById("description").value = "";
       document.getElementById("price").value = "";
+      document.getElementById("preview").style.display = "none";
       showPosts();
     }
 
+    // === הצגת פוסטים ===
     async function showPosts() {
-      const container = document.getElementById("postsList");
-      container.innerHTML = "";
-      const { data, error } = await supabase.from("posts").select().order("created_at", { ascending: false });
-      if (error) return console.error(error);
+      const { data } = await supabase.from('posts').select().order('created_at', { ascending: false });
+      const list = document.getElementById("postsList");
+      list.innerHTML = "";
+      if (!data || data.length === 0) {
+        list.innerHTML = "<p>אין עדיין פוסטים.</p>";
+        return;
+      }
       data.forEach(p => {
-        container.innerHTML += `
+        const canDelete = savedCode === "admin" || p.usercode === savedCode;
+        list.innerHTML += `
           <div class="post">
+            ${p.photo ? <img src="${p.photo}"> : ""}
             <h4>${p.name}</h4>
             <p>${p.desc}</p>
             <p>💰 ${p.price || "ללא מחיר"}</p>
+            ${canDelete ? <button onclick="deletePost('${p.id}')">❌ מחק</button> : ""}
           </div>`;
       });
     }
 
-    function logout() {
-      location.reload();
+    async function deletePost(id) {
+      if (!confirm("למחוק את הפוסט?")) return;
+      await supabase.from('posts').delete().eq('id', id);
+      showPosts();
     }
 
-    // Привязка кнопок (исправлено!)
+    function enterUser(isAdmin) {
+      document.getElementById("registerBox").style.display = "none";
+      document.getElementById("loginBox").style.display = "none";
+      document.getElementById("welcomeBox").style.display = "block";
+      document.getElementById("allPosts").style.display = "block";
+      document.getElementById("createPost").style.display = isAdmin ? "none" : "block";
+      document.getElementById("adminPanel").style.display = isAdmin ? "block" : "none";
+      document.getElementById("welcomeText").innerText = "ברוך הבא " + savedName;
+      showPosts();
+    }
+
+    // === מצלמה ===
+    const video = document.getElementById("camera");
+    const canvas = document.getElementById("photo");
+    const img = document.getElementById("preview");
+
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then(stream => { video.srcObject = stream; })
+      .catch(err => console.error("Camera error:", err));
+
+    document.getElementById("capture").onclick = () => {
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      canvas.getContext('2d').drawImage(video, 0, 0);
+      img.src = canvas.toDataURL("image/png");
+      img.style.display = "block";
+    };
+
     document.getElementById("registerBtn").onclick = register;
-    document.getElementById("continueBtn").onclick = continueToLogin;
     document.getElementById("loginBtn").onclick = login;
     document.getElementById("savePostBtn").onclick = savePost;
-    document.getElementById("logoutBtn").onclick = logout;
+
+    document.getElementById("copyCodeBtn").onclick = () => {
+      navigator.clipboard.writeText(savedCode);
+      alert("הקוד הועתק!");
+    };
+    document.getElementById("continueBtn").onclick = () => {
+      document.getElementById("registerBox").style.display = "none";
+      document.getElementById("loginBox").style.display = "block";
+    };
   </script>
 </body>
 </html>
