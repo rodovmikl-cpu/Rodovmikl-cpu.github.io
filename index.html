@@ -15,16 +15,17 @@
       color:#222;
     }
     .box{background:#fff;padding:20px;margin:20px auto;border-radius:14px;
-      box-shadow:0 4px 12px rgba(0,0,0,0.1);max-width:420px;}
+      box-shadow:0 4px 12px rgba(0,0,0,0.1);max-width:600px;}
     input,textarea{width:90%;padding:10px;margin:8px 0;border-radius:8px;
       border:1px solid #ccc;text-align:center;font-size:15px;}
-    button{padding:10px 16px;border:none;background:#0078ff;color:white;
-      border-radius:8px;cursor:pointer;margin:6px;font-weight:bold;transition:.3s;}
+    button{padding:8px 12px;border:none;background:#0078ff;color:white;
+      border-radius:8px;cursor:pointer;margin:4px;font-weight:bold;transition:.3s;}
     button:hover{background:#005fcc;}
+    .deleteBtn{background:#ff5252;margin-left:6px;}
+    .deleteBtn:hover{background:#c62828;}
     video,img{width:100%;max-width:360px;border-radius:10px;margin-top:10px;}
-    #regMessage{min-height:20px;margin-top:6px;color:#0a7a00;font-weight:bold;}
-    #adminBox button{background:#ff5252;}
-    #adminBox button:hover{background:#c62828;}
+    #regMessage,#logMessage,#adminMsg{min-height:20px;margin-top:6px;font-weight:bold;}
+    .list-item{display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid #eee;}
   </style>
 </head>
 <body>
@@ -65,10 +66,10 @@
   <!-- админ -->
   <div class="box" id="adminBox" style="display:none;">
     <h2>ניהול מערכת</h2>
-    <input type="text" id="deleteUserId" placeholder="קוד משתמש למחיקה">
-    <button id="deleteUserBtn">מחק משתמש</button><br>
-    <input type="text" id="deletePostId" placeholder="מזהה פוסט למחיקה">
-    <button id="deletePostBtn">מחק פוסט</button>
+    <h3>משתמשים:</h3>
+    <div id="usersList"></div>
+    <h3>פוסטים:</h3>
+    <div id="postsList"></div>
     <div id="adminMsg"></div>
     <button onclick="logout()">🔒 התנתק</button>
   </div>
@@ -77,7 +78,7 @@
     import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
     const supabaseUrl = "https://fxskzfjezoolsgqytumw.supabase.co";
-    const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ4c2t6Zmplem9vbHNncXl0dW13Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEwNTkzODksImV4cCI6MjA3NjYzNTM4OX0.MYIWkWhdVNzlqs53l4a4eJXQJeJpf0bD3kQQCDN-zrI";
+    const supabaseKey = "YOUR_SUPABASE_KEY"; // вставь свой ключ
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     let users = JSON.parse(localStorage.getItem("users") || "{}");
@@ -104,9 +105,13 @@
       document.getElementById("loginBox").style.display="block";
     }
 
-    function login(){
+    async function login(){
       const loginCode=document.getElementById("loginCode").value.trim();
-      if(loginCode==="admin"){ showAdmin(); return; }
+      if(loginCode==="admin"){ 
+        document.getElementById("loginBox").style.display="none";
+        showAdmin();
+        return; 
+      }
       if(users[loginCode]){
         savedCode=loginCode; savedName=users[loginCode].name; enterUser();
       } else {
@@ -119,11 +124,6 @@
       document.getElementById("welcomeBox").style.display="block";
       document.getElementById("welcomeText").innerText="ברוך הבא, "+savedName+"!";
       startCamera();
-    }
-
-    function showAdmin(){
-      document.getElementById("loginBox").style.display="none";
-      document.getElementById("adminBox").style.display="block";
     }
 
     function logout(){
@@ -143,18 +143,44 @@
     }
 
     // ===== админ-функции Supabase =====
-    async function deleteUser(){
-      const id=document.getElementById("deleteUserId").value.trim();
-      if(!id){alert("הכנס קוד משתמש");return;}
-      const {error}=await supabase.from('users').delete().eq('id',id);
-      document.getElementById("adminMsg").innerText= error ? "שגיאה במחיקה" : "המשתמש נמחק!";
+    async function showAdmin(){
+      document.getElementById("adminBox").style.display="block";
+      await loadUsers();
+      await loadPosts();
     }
 
-    async function deletePost(){
-      const id=document.getElementById("deletePostId").value.trim();
-      if(!id){alert("הכנס מזהה פוסט");return;}
-      const {error}=await supabase.from('posts').delete().eq('id',id);
-      document.getElementById("adminMsg").innerText= error ? "שגיאה במחיקה" : "הפוסט נמחק!";
+    async function loadUsers(){
+      const {data,error} = await supabase.from('users').select('*');
+      const container=document.getElementById("usersList");
+      container.innerHTML="";
+      if(error){container.innerText="שגיאה בטעינת משתמשים";return;}
+      data.forEach(u=>{
+        const div=document.createElement("div");
+        div.className="list-item";
+        div.innerHTML=${u.id || u.code} - ${u.name} <button class="deleteBtn">מחק</button>;
+        div.querySelector("button").onclick=async ()=>{
+          const {error}=await supabase.from('users').delete().eq('id',u.id || u.code);
+          if(error){alert("שגיאה במחיקה");} else {div.remove();}
+        };
+        container.appendChild(div);
+      });
+    }
+
+    async function loadPosts(){
+      const {data,error} = await supabase.from('posts').select('*');
+      const container=document.getElementById("postsList");
+      container.innerHTML="";
+      if(error){container.innerText="שגיאה בטעינת פוסטים";return;}
+      data.forEach(p=>{
+        const div=document.createElement("div");
+        div.className="list-item";
+        div.innerHTML=${p.id || p.usercode} - ${p.content || 'פוסט'} <button class="deleteBtn">מחק</button>;
+        div.querySelector("button").onclick=async ()=>{
+          const {error}=await supabase.from('posts').delete().eq('id',p.id || p.usercode);
+          if(error){alert("שגיאה במחיקה");} else {div.remove();}
+        };
+        container.appendChild(div);
+      });
     }
 
     // кнопки
@@ -162,9 +188,6 @@
     document.getElementById("continueBtn").onclick=continueToLogin;
     document.getElementById("loginBtn").onclick=login;
     document.getElementById("logoutBtn").onclick=logout;
-    document.getElementById("deleteUserBtn").onclick=deleteUser;
-    document.getElementById("deletePostBtn").onclick=deletePost;
-
     document.getElementById("copyCodeBtn").onclick=()=>{
       const codeEl=document.getElementById("generatedCode");
       navigator.clipboard.writeText(codeEl.innerText).then(()=>alert("הקוד הועתק!"));
