@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>SchoolTrade</title>
-  <link rel="icon" href="data:,"> <!-- убирает ошибку favicon -->
+  <link rel="icon" href="data:,">
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -78,7 +78,7 @@
     import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
     const supabaseUrl = "https://fxskzfjezoolsgqytumw.supabase.co";
-    const supabaseKey = "YOUR_SUPABASE_KEY"; // вставь свой ключ
+    const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ4c2t6Zmplem9vbHNncXl0dW13Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEwNTkzODksImV4cCI6MjA3NjYzNTM4OX0.MYIWkWhdVNzlqs53l4a4eJXQJeJpf0bD3kQQCDN-zrI";
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     let users = JSON.parse(localStorage.getItem("users") || "{}");
@@ -109,7 +109,7 @@
       const loginCode=document.getElementById("loginCode").value.trim();
       if(loginCode==="admin"){ 
         document.getElementById("loginBox").style.display="none";
-        showAdmin();
+        await showAdmin();
         return; 
       }
       if(users[loginCode]){
