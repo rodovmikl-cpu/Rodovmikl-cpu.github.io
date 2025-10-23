@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>SchoolTrade</title>
+  <link rel="icon" href="favicon.ico"> <!-- убирает 404 -->
   <style>
     body {
       font-family: 'Arial', sans-serif;
@@ -58,170 +59,149 @@
 </head>
 <body>
 
-  <!-- регистрация -->
-  <div class="box" id="registerBox">
-    <h2>הרשמה</h2>
-    <input type="text" id="nickname" placeholder="הכנס שם ושם משפחה שלך">
-    <button id="registerBtn">הרשם</button>
-    <div id="regMessage"></div>
+<div class="box" id="registerBox">
+  <h2>הרשמה</h2>
+  <input type="text" id="nickname" placeholder="הכנס שם ושם משפחה שלך">
+  <button id="registerBtn">הרשם</button>
+  <div id="regMessage"></div>
 
-    <div id="showCodeBox" style="display:none;">
-      <p>הקוד שלך:</p>
-      <h3 id="generatedCode"></h3>
-      <button id="copyCodeBtn">העתק קוד</button>
-      <p>שמור את הקוד — תצטרך אותו כדי להתחבר!</p>
-      <button id="continueBtn">המשך</button>
-    </div>
+  <div id="showCodeBox" style="display:none;">
+    <p>הקוד שלך:</p>
+    <h3 id="generatedCode"></h3>
+    <button id="copyCodeBtn">העתק קוד</button>
+    <p>שמור את הקוד — תצטרך אותו כדי להתחבר!</p>
+    <button id="continueBtn">המשך</button>
   </div>
+</div>
 
-  <!-- вход -->
-  <div class="box" id="loginBox" style="display:none;">
-    <h2>התחברות</h2>
-    <input type="text" id="loginCode" placeholder="הכנס את הקוד">
-    <button id="loginBtn">התחבר</button>
-    <div id="logMessage"></div>
-  </div>
+<div class="box" id="loginBox" style="display:none;">
+  <h2>התחברות</h2>
+  <input type="text" id="loginCode" placeholder="הכנס את הקוד">
+  <button id="loginBtn">התחבר</button>
+  <div id="logMessage"></div>
+</div>
 
-  <!-- приветствие -->
-  <div class="box" id="welcomeBox" style="display:none;">
-    <h2 id="welcomeText"></h2>
-    <video id="camera" autoplay playsinline></video><br>
-    <button id="capture">📸 צלם תמונה</button>
-    <canvas id="photo" style="display:none;"></canvas>
-    <img id="preview" style="display:none;">
-    <button id="logoutBtn">🔒 התנתק</button>
-  </div>
+<div class="box" id="welcomeBox" style="display:none;">
+  <h2 id="welcomeText"></h2>
+  <video id="camera" autoplay playsinline></video><br>
+  <button id="capture">📸 צלם תמונה</button>
+  <canvas id="photo" style="display:none;"></canvas>
+  <img id="preview" style="display:none;">
+  <button id="logoutBtn">🔒 התנתק</button>
+</div>
 
-  <script type="module">
-    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+<script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
-    // ======= Настройки Supabase =======
-    const SUPABASE_URL = 'https://fxskzfjezoolsgqytumw.supabase.co';
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ4c2t6Zmplem9vbHNncXl0dW13Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEwNTkzODksImV4cCI6MjA3NjYzNTM4OX0.MYIWkWhdVNzlqs53l4a4eJXQJeJpf0bD3kQQCDN-zrI';
-    const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+// ====== Настройки Supabase ======
+const SUPABASE_URL = 'https://fxskzfjezoolsgqytumw.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ4c2t6Zmplem9vbHNncXl0dW13Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEwNTkzODksImV4cCI6MjA3NjYzNTM4OX0.MYIWkWhdVNzlqs53l4a4eJXQJeJpf0bD3kQQCDN-zrI';
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // ======== Основные переменные ========
-    let savedCode = "", savedName = "";
+// ====== Основные переменные ======
+let savedCode = "", savedName = "";
 
-    // ======== Регистрация ========
-    async function register() {
-      const nickname = document.getElementById("nickname").value.trim();
-      if (!nickname) {
-        document.getElementById("regMessage").innerText = "אנא הכנס שם משתמש";
-        return;
-      }
+// ====== Регистрация ======
+async function register() {
+  const nickname = document.getElementById("nickname").value.trim();
+  if (!nickname) { document.getElementById("regMessage").innerText = "אנא הכנס שם משתמש"; return; }
 
-      let code;
-      do { code = Math.floor(100000000 + Math.random() * 900000000).toString(); }
-      while (false); // тут проверка на существование в Supabase можно сделать, если нужно
+  savedCode = Math.floor(100000000 + Math.random() * 900000000).toString();
+  savedName = nickname;
 
-      savedCode = code;
-      savedName = nickname;
+  // Важно: в Supabase должна быть политика insert для anon ключа, иначе 42501
+  const { error } = await supabase.from('users').insert([{ code: savedCode, name: nickname }]);
+  if (error) { console.error(error); alert("שגיאה בהרשמה — בדוק את הקונסול"); return; }
 
-      // Сохраняем в Supabase
-      const { error } = await supabase.from('users').insert([{ code, name: nickname }]);
-      if (error) {
-        alert("שגיאה בהרשמה — בדוק את הקונסול");
-        console.error(error);
-        return;
-      }
+  document.getElementById("generatedCode").innerText = savedCode;
+  document.getElementById("showCodeBox").style.display = "block";
+  document.getElementById("regMessage").innerText = "נרשמת בהצלחה — שמור את הקוד!";
+}
 
-      document.getElementById("generatedCode").innerText = code;
-      document.getElementById("showCodeBox").style.display = "block";
-      document.getElementById("regMessage").innerText = "נרשמת בהצלחה — שמור את הקוד!";
-    }
+// ====== Продолжить ======
+function continueToLogin() {
+  document.getElementById("registerBox").style.display = "none";
+  document.getElementById("loginBox").style.display = "block";
+}
 
-    // ======== Продолжить ========
-    function continueToLogin() {
-      document.getElementById("registerBox").style.display = "none";
-      document.getElementById("loginBox").style.display = "block";
-    }
+// ====== Вход ======
+async function login() {
+  const loginCode = document.getElementById("loginCode").value.trim();
+  if (!loginCode) return;
 
-    // ======== Вход ========
-    async function login() {
-      const loginCode = document.getElementById("loginCode").value.trim();
-      if (!loginCode) return;
+  savedCode = loginCode;
+  const { data, error } = await supabase.from('users').select('name, photo').eq('code', savedCode).single();
+  if (error || !data) { document.getElementById("logMessage").innerText = "קוד שגוי!"; return; }
 
-      savedCode = loginCode;
+  savedName = data.name;
+  enterUser(data.photo);
+}
 
-      const { data, error } = await supabase.from('users').select('name, photo').eq('code', savedCode).single();
-      if (error || !data) {
-        document.getElementById("logMessage").innerText = "קוד שגוי!";
-        return;
-      }
+// ====== Вход пользователя ======
+function enterUser(photo = null) {
+  document.getElementById("loginBox").style.display = "none";
+  document.getElementById("welcomeBox").style.display = "block";
+  document.getElementById("welcomeText").innerText = "ברוך הבא, " + savedName + "!";
+  startCamera();
 
-      savedName = data.name;
-      enterUser(data.photo);
-    }
+  if (photo) {
+    const preview = document.getElementById('preview');
+    preview.src = photo;
+    preview.style.display = 'block';
+  }
+}
 
-    // ======== Вход пользователя ========
-    function enterUser(photo = null) {
-      document.getElementById("loginBox").style.display = "none";
-      document.getElementById("welcomeBox").style.display = "block";
-      document.getElementById("welcomeText").innerText = "ברוך הבא, " + savedName + "!";
-      startCamera();
+// ====== Выход ======
+function logout() {
+  document.getElementById("welcomeBox").style.display = "none";
+  document.getElementById("registerBox").style.display = "block";
+  document.getElementById("showCodeBox").style.display = "none";
+  document.getElementById("nickname").value = "";
+  savedCode = "";
+  savedName = "";
+}
 
-      if (photo) {
-        const preview = document.getElementById('preview');
-        preview.src = photo;
-        preview.style.display = 'block';
-      }
-    }
+// ====== Камера ======
+function startCamera() {
+  const video = document.getElementById('camera');
+  navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+    .then(stream => { video.srcObject = stream; })
+    .catch(err => { console.warn('⚠ שגיאה במצלמה:', err); alert("אין גישה למצלמה — בדוק הרשאות."); });
+}
 
-    // ======== Выход ========
-    function logout() {
-      document.getElementById("welcomeBox").style.display = "none";
-      document.getElementById("registerBox").style.display = "block";
-      document.getElementById("showCodeBox").style.display = "none";
-      document.getElementById("nickname").value = "";
-      savedCode = "";
-      savedName = "";
-    }
+// ====== Захват фото ======
+document.getElementById("capture").addEventListener("click", async () => {
+  const video = document.getElementById('camera');
+  const canvas = document.getElementById('photo');
+  const preview = document.getElementById('preview');
+  const ctx = canvas.getContext('2d');
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+  const dataUrl = canvas.toDataURL('image/png');
+  preview.src = dataUrl;
+  preview.style.display = 'block';
 
-    // ======== Камера ========
-    function startCamera() {
-      const video = document.getElementById('camera');
-      navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
-        .then(stream => { video.srcObject = stream; })
-        .catch(err => {
-          console.warn('⚠ שגיאה במצלמה:', err);
-          alert("אין גישה למצלמה — בדוק הרשאות.");
-        });
-    }
+  if (savedCode) {
+    const { error } = await supabase.from('users').update({ photo: dataUrl }).eq('code', savedCode);
+    if (error) console.error("❌ Ошибка при сохранении фото:", error);
+  }
+});
 
-    // ======== Захват фото и сохранение в Supabase ========
-    document.getElementById("capture").addEventListener("click", async () => {
-      const video = document.getElementById('camera');
-      const canvas = document.getElementById('photo');
-      const preview = document.getElementById('preview');
-      const ctx = canvas.getContext('2d');
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      const dataUrl = canvas.toDataURL('image/png');
-      preview.src = dataUrl;
-      preview.style.display = 'block';
+// ====== Копирование кода ======
+document.getElementById("copyCodeBtn").addEventListener("click", () => {
+  const codeEl = document.getElementById("generatedCode");
+  navigator.clipboard.writeText(codeEl.innerText)
+    .then(() => alert("הקוד הועתק!"))
+    .catch(err => alert("לא ניתן להעתיק קוד"));
+});
 
-      // сохраняем в Supabase
-      if (savedCode) {
-        const { error } = await supabase.from('users').update({ photo: dataUrl }).eq('code', savedCode);
-        if (error) console.error("❌ Ошибка при сохранении фото:", error);
-      }
-    });
+// ====== Слушатели ======
+document.getElementById("registerBtn").addEventListener("click", register);
+document.getElementById("continueBtn").addEventListener("click", continueToLogin);
+document.getElementById("loginBtn").addEventListener("click", login);
+document.getElementById("logoutBtn").addEventListener("click", logout);
 
-    // ======== Копирование кода ========
-    document.getElementById("copyCodeBtn").addEventListener("click", () => {
-      const codeEl = document.getElementById("generatedCode");
-      navigator.clipboard.writeText(codeEl.innerText)
-        .then(() => alert("הקוד הועתק!"))
-        .catch(err => alert("לא ניתן להעתיק קוד"));
-    });
-
-    // ======== Навешиваем слушатели ========
-    document.getElementById("registerBtn").addEventListener("click", register);
-    document.getElementById("continueBtn").addEventListener("click", continueToLogin);
-    document.getElementById("loginBtn").addEventListener("click", login);
-    document.getElementById("logoutBtn").addEventListener("click", logout);
-  </script>
+</script>
 </body>
 </html>
