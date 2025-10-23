@@ -48,7 +48,7 @@
       border-radius: 10px;
       margin-top: 10px;
     }
-    #regMessage, #logMessage {
+    #regMessage {
       min-height: 20px;
       margin-top: 6px;
       color: #0a7a00;
@@ -92,14 +92,7 @@
     <button id="logoutBtn">🔒 התנתק</button>
   </div>
 
-  <script type="module">
-    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
-
-    // ======= Настройки Supabase =======
-    const SUPABASE_URL = 'https://fxskzfjezoolsgqytumw.supabase.co';
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ4c2t6Zmplem9vbHNncXl0dW13Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEwNTkzODksImV4cCI6MjA3NjYzNTM4OX0.MYIWkWhdVNzlqs53l4a4eJXQJeJpf0bD3kQQCDN-zrI';
-    const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
-
+  <script>
     // ======== Основные переменные ========
     let users = JSON.parse(localStorage.getItem("users") || "{}");
     let savedCode = "", savedName = "";
@@ -109,7 +102,7 @@
     }
 
     // ======== Регистрация ========
-    async function register() {
+    function register() {
       try {
         const nickname = document.getElementById("nickname").value.trim();
         if (!nickname) {
@@ -118,14 +111,12 @@
         }
 
         let code;
-        do { code = Math.floor(100000000 + Math.random() * 900000000).toString(); }
-        while (users[code]);
+        do {
+          code = Math.floor(100000000 + Math.random() * 900000000).toString();
+        } while (users[code]);
 
-        users[code] = { name: nickname, photo: null };
+        users[code] = { name: nickname };
         saveData();
-
-        // Сохраняем пользователя в Supabase
-        await supabase.from('users').insert([{ code, name: nickname }]);
 
         savedName = nickname;
         savedCode = code;
@@ -147,40 +138,27 @@
     }
 
     // ======== Вход ========
-    async function login() {
+    function login() {
       try {
         const loginCode = document.getElementById("loginCode").value.trim();
-        if (!loginCode) return;
-
-        savedCode = loginCode;
-
-        // Берем имя и фото из Supabase
-        const { data, error } = await supabase.from('users').select('name, photo').eq('code', savedCode).single();
-        if (error || !data) {
+        if (users[loginCode]) {
+          savedCode = loginCode;
+          savedName = users[loginCode].name;
+          enterUser();
+        } else {
           document.getElementById("logMessage").innerText = "קוד שגוי!";
-          return;
         }
-
-        savedName = data.name;
-        users[savedCode] = { name: savedName, photo: data.photo || null };
-        enterUser(data.photo);
       } catch (err) {
-        console.error("❌ Ошибка при входе:", err);
+        console.error("❌ Ошибка в login():", err);
       }
     }
 
     // ======== Вход пользователя ========
-    function enterUser(photo = null) {
+    function enterUser() {
       document.getElementById("loginBox").style.display = "none";
       document.getElementById("welcomeBox").style.display = "block";
       document.getElementById("welcomeText").innerText = "ברוך הבא, " + savedName + "!";
       startCamera();
-
-      if (photo) {
-        const preview = document.getElementById('preview');
-        preview.src = photo;
-        preview.style.display = 'block';
-      }
     }
 
     // ======== Выход ========
@@ -205,7 +183,7 @@
     }
 
     // ======== Захват фото ========
-    document.getElementById("capture").addEventListener("click", async () => {
+    document.getElementById("capture").addEventListener("click", () => {
       const video = document.getElementById('camera');
       const canvas = document.getElementById('photo');
       const preview = document.getElementById('preview');
@@ -214,16 +192,8 @@
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        const dataUrl = canvas.toDataURL('image/png');
-        preview.src = dataUrl;
+        preview.src = canvas.toDataURL('image/png');
         preview.style.display = 'block';
-
-        // Сохраняем фото в Supabase
-        if (savedCode) {
-          const { error } = await supabase.from('users').update({ photo: dataUrl }).eq('code', savedCode);
-          if (error) console.error("❌ Ошибка при сохранении фото:", error);
-          else console.log("✅ Фото сохранено в Supabase");
-        }
       } catch (err) {
         console.error("❌ Ошибка при съёмке:", err);
       }
