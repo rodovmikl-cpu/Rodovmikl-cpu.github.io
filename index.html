@@ -4,67 +4,37 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>SchoolTrade</title>
+  <link rel="icon" href="data:,"> <!-- убирает ошибку favicon -->
   <style>
     body {
-      font-family: 'Arial', sans-serif;
-      background: linear-gradient(135deg, #f0f4ff, #d9e7ff);
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg,#f0f4ff,#d9e7ff);
       text-align: center;
       direction: rtl;
       margin-bottom: 220px;
-      color: #222;
+      color:#222;
     }
-    .box {
-      background: #ffffff;
-      padding: 20px;
-      margin: 20px auto;
-      border-radius: 14px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-      max-width: 420px;
-    }
-    input, textarea {
-      width: 90%;
-      padding: 10px;
-      margin: 8px 0;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-      text-align: center;
-      font-size: 15px;
-    }
-    button {
-      padding: 10px 16px;
-      border: none;
-      background: #0078ff;
-      color: white;
-      border-radius: 8px;
-      cursor: pointer;
-      margin: 6px;
-      font-weight: bold;
-      transition: 0.3s;
-    }
-    button:hover { background: #005fcc; }
-    video, img {
-      width: 100%;
-      max-width: 360px;
-      border-radius: 10px;
-      margin-top: 10px;
-    }
-    #adminPanel button {
-      background: #cc0000;
-    }
-    #adminPanel button:hover {
-      background: #990000;
-    }
+    .box{background:#fff;padding:20px;margin:20px auto;border-radius:14px;
+      box-shadow:0 4px 12px rgba(0,0,0,0.1);max-width:420px;}
+    input,textarea{width:90%;padding:10px;margin:8px 0;border-radius:8px;
+      border:1px solid #ccc;text-align:center;font-size:15px;}
+    button{padding:10px 16px;border:none;background:#0078ff;color:white;
+      border-radius:8px;cursor:pointer;margin:6px;font-weight:bold;transition:.3s;}
+    button:hover{background:#005fcc;}
+    video,img{width:100%;max-width:360px;border-radius:10px;margin-top:10px;}
+    #regMessage{min-height:20px;margin-top:6px;color:#0a7a00;font-weight:bold;}
+    #adminBox button{background:#ff5252;}
+    #adminBox button:hover{background:#c62828;}
   </style>
 </head>
 <body>
 
-  <!-- Регистрация -->
+  <!-- регистрация -->
   <div class="box" id="registerBox">
     <h2>הרשמה</h2>
     <input type="text" id="nickname" placeholder="הכנס שם ושם משפחה שלך">
     <button id="registerBtn">הרשם</button>
     <div id="regMessage"></div>
-
     <div id="showCodeBox" style="display:none;">
       <p>הקוד שלך:</p>
       <h3 id="generatedCode"></h3>
@@ -74,7 +44,7 @@
     </div>
   </div>
 
-  <!-- Вход -->
+  <!-- вход -->
   <div class="box" id="loginBox" style="display:none;">
     <h2>התחברות</h2>
     <input type="text" id="loginCode" placeholder="הכנס את הקוד">
@@ -82,7 +52,7 @@
     <div id="logMessage"></div>
   </div>
 
-  <!-- Пользователь -->
+  <!-- приветствие -->
   <div class="box" id="welcomeBox" style="display:none;">
     <h2 id="welcomeText"></h2>
     <video id="camera" autoplay playsinline></video><br>
@@ -92,182 +62,115 @@
     <button id="logoutBtn">🔒 התנתק</button>
   </div>
 
-  <!-- Панель администратора -->
-  <div class="box" id="adminPanel" style="display:none;">
-    <h2>⚙ ניהול מערכת</h2>
-    <button onclick="loadUsers()">📋 הצג משתמשים</button>
-    <button onclick="loadPosts()">📰 הצג פוסטים</button>
-    <div id="adminContent"></div>
-    <button id="logoutAdmin">🚪 התנתק</button>
+  <!-- админ -->
+  <div class="box" id="adminBox" style="display:none;">
+    <h2>ניהול מערכת</h2>
+    <input type="text" id="deleteUserId" placeholder="קוד משתמש למחיקה">
+    <button id="deleteUserBtn">מחק משתמש</button><br>
+    <input type="text" id="deletePostId" placeholder="מזהה פוסט למחיקה">
+    <button id="deletePostBtn">מחק פוסט</button>
+    <div id="adminMsg"></div>
+    <button onclick="logout()">🔒 התנתק</button>
   </div>
 
-  <script>
-    // === SUPABASE CONFIG ===
-    const SUPABASE_URL = "https://fxskzfjezoolsgqytumw.supabase.co";
-    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ4c2t6Zmplem9vbHNncXl0dW13Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEwNTkzODksImV4cCI6MjA3NjYzNTM4OX0.MYIWkWhdVNzlqs53l4a4eJXQJeJpf0bD3kQQCDN-zrI";
+  <script type="module">
+    import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-    async function supabaseFetch(table, method = "GET", id = null) {
-      let url = ${SUPABASE_URL}/rest/v1/${table};
-      if (id) url += ?id=eq.${id};
-      const options = {
-        method,
-        headers: {
-          "apikey": SUPABASE_KEY,
-          "Authorization": Bearer ${SUPABASE_KEY},
-          "Content-Type": "application/json",
-          "Prefer": "return=minimal"
-        }
-      };
-      return fetch(url, options);
-    }
+    const supabaseUrl = "https://fxskzfjezoolsgqytumw.supabase.co";
+    const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ4c2t6Zmplem9vbHNncXl0dW13Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEwNTkzODksImV4cCI6MjA3NjYzNTM4OX0.MYIWkWhdVNzlqs53l4a4eJXQJeJpf0bD3kQQCDN-zrI";
+    const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // === LOCAL USERS ===
     let users = JSON.parse(localStorage.getItem("users") || "{}");
     let savedCode = "", savedName = "";
 
-    function saveData() {
-      localStorage.setItem("users", JSON.stringify(users));
-    }
+    function saveData(){ localStorage.setItem("users", JSON.stringify(users)); }
 
-    // === Регистрация ===
-    function register() {
+    // регистрация
+    function register(){
       const nickname = document.getElementById("nickname").value.trim();
-      if (!nickname) {
-        document.getElementById("regMessage").innerText = "אנא הכנס שם משתמש";
-        return;
-      }
-
+      if(!nickname){document.getElementById("regMessage").innerText="אנא הכנס שם משתמש";return;}
       let code;
-      do {
-        code = Math.floor(100000000 + Math.random() * 900000000).toString();
-      } while (users[code]);
-
-      users[code] = { name: nickname };
+      do{code=Math.floor(100000000+Math.random()*900000000).toString();}while(users[code]);
+      users[code]={name:nickname};
       saveData();
-
-      savedName = nickname;
-      savedCode = code;
-
-      document.getElementById("generatedCode").innerText = code;
-      document.getElementById("showCodeBox").style.display = "block";
-      document.getElementById("regMessage").innerText = "נרשמת בהצלחה!";
+      savedName=nickname; savedCode=code;
+      document.getElementById("generatedCode").innerText=code;
+      document.getElementById("showCodeBox").style.display="block";
+      document.getElementById("regMessage").innerText="נרשמת בהצלחה — שמור את הקוד!";
     }
 
-    // === Продолжить ===
-    function continueToLogin() {
-      document.getElementById("registerBox").style.display = "none";
-      document.getElementById("loginBox").style.display = "block";
+    function continueToLogin(){
+      document.getElementById("registerBox").style.display="none";
+      document.getElementById("loginBox").style.display="block";
     }
 
-    // === Вход ===
-    function login() {
-      const loginCode = document.getElementById("loginCode").value.trim();
-
-      if (loginCode === "admin") {
-        document.getElementById("loginBox").style.display = "none";
-        document.getElementById("adminPanel").style.display = "block";
-        return;
-      }
-
-      if (users[loginCode]) {
-        savedCode = loginCode;
-        savedName = users[loginCode].name;
-        enterUser();
+    function login(){
+      const loginCode=document.getElementById("loginCode").value.trim();
+      if(loginCode==="admin"){ showAdmin(); return; }
+      if(users[loginCode]){
+        savedCode=loginCode; savedName=users[loginCode].name; enterUser();
       } else {
-        document.getElementById("logMessage").innerText = "קוד שגוי!";
+        document.getElementById("logMessage").innerText="קוד שגוי!";
       }
     }
 
-    // === Пользователь ===
-    function enterUser() {
-      document.getElementById("loginBox").style.display = "none";
-      document.getElementById("welcomeBox").style.display = "block";
-      document.getElementById("welcomeText").innerText = "ברוך הבא, " + savedName + "!";
+    function enterUser(){
+      document.getElementById("loginBox").style.display="none";
+      document.getElementById("welcomeBox").style.display="block";
+      document.getElementById("welcomeText").innerText="ברוך הבא, "+savedName+"!";
       startCamera();
     }
 
-    // === Выход ===
-    function logout() {
-      document.getElementById("welcomeBox").style.display = "none";
-      document.getElementById("registerBox").style.display = "block";
-      document.getElementById("showCodeBox").style.display = "none";
-      document.getElementById("nickname").value = "";
-      savedCode = "";
-      savedName = "";
+    function showAdmin(){
+      document.getElementById("loginBox").style.display="none";
+      document.getElementById("adminBox").style.display="block";
     }
 
-    document.getElementById("logoutAdmin").onclick = () => {
-      document.getElementById("adminPanel").style.display = "none";
-      document.getElementById("loginBox").style.display = "block";
+    function logout(){
+      document.getElementById("welcomeBox").style.display="none";
+      document.getElementById("adminBox").style.display="none";
+      document.getElementById("registerBox").style.display="block";
+      document.getElementById("showCodeBox").style.display="none";
+      document.getElementById("nickname").value="";
+      savedCode=""; savedName="";
+    }
+
+    function startCamera(){
+      const video=document.getElementById('camera');
+      navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}})
+      .then(stream=>{video.srcObject=stream;})
+      .catch(err=>{console.warn('⚠ שגיאה במצלמה:',err);});
+    }
+
+    // ===== админ-функции Supabase =====
+    async function deleteUser(){
+      const id=document.getElementById("deleteUserId").value.trim();
+      if(!id){alert("הכנס קוד משתמש");return;}
+      const {error}=await supabase.from('users').delete().eq('id',id);
+      document.getElementById("adminMsg").innerText= error ? "שגיאה במחיקה" : "המשתמש נמחק!";
+    }
+
+    async function deletePost(){
+      const id=document.getElementById("deletePostId").value.trim();
+      if(!id){alert("הכנס מזהה פוסט");return;}
+      const {error}=await supabase.from('posts').delete().eq('id',id);
+      document.getElementById("adminMsg").innerText= error ? "שגיאה במחיקה" : "הפוסט נמחק!";
+    }
+
+    // кнопки
+    document.getElementById("registerBtn").onclick=register;
+    document.getElementById("continueBtn").onclick=continueToLogin;
+    document.getElementById("loginBtn").onclick=login;
+    document.getElementById("logoutBtn").onclick=logout;
+    document.getElementById("deleteUserBtn").onclick=deleteUser;
+    document.getElementById("deletePostBtn").onclick=deletePost;
+
+    document.getElementById("copyCodeBtn").onclick=()=>{
+      const codeEl=document.getElementById("generatedCode");
+      navigator.clipboard.writeText(codeEl.innerText).then(()=>alert("הקוד הועתק!"));
     };
 
-    // === Камера ===
-    function startCamera() {
-      const video = document.getElementById('camera');
-      navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
-        .then(stream => video.srcObject = stream)
-        .catch(err => alert("אין גישה למצלמה"));
-    }
-
-    // === Фото ===
-    document.getElementById("capture").addEventListener("click", () => {
-      const video = document.getElementById('camera');
-      const canvas = document.getElementById('photo');
-      const preview = document.getElementById('preview');
-      const ctx = canvas.getContext('2d');
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      preview.src = canvas.toDataURL('image/png');
-      preview.style.display = 'block';
-    });
-
-    // === Копирование ===
-    document.getElementById("copyCodeBtn").addEventListener("click", () => {
-      const codeEl = document.getElementById("generatedCode");
-      navigator.clipboard.writeText(codeEl.innerText).then(() => alert("הקוד הועתק!"));
-    });
-
-    // === Админ ===
-    async function loadUsers() {
-      const res = await fetch(${SUPABASE_URL}/rest/v1/users?select=*, {
-        headers: { apikey: SUPABASE_KEY, Authorization: Bearer ${SUPABASE_KEY} }
-      });
-      const data = await res.json();
-      const div = document.getElementById("adminContent");
-      div.innerHTML = "<h3>משתמשים:</h3>" + data.map(u => 
-        <div>ID: ${u.id} | שם: ${u.name} <button onclick="deleteUser(${u.id})">❌ מחק</button></div>
-      ).join("");
-    }
-
-    async function deleteUser(id) {
-      await supabaseFetch("users", "DELETE", id);
-      alert("המשתמש נמחק!");
-      loadUsers();
-    }
-
-    async function loadPosts() {
-      const res = await fetch(${SUPABASE_URL}/rest/v1/posts?select=*, {
-        headers: { apikey: SUPABASE_KEY, Authorization: Bearer ${SUPABASE_KEY} }
-      });
-      const data = await res.json();
-      const div = document.getElementById("adminContent");
-      div.innerHTML = "<h3>פוסטים:</h3>" + data.map(p =>
-        <div>ID: ${p.id} | ${p.name} <button onclick="deletePost(${p.id})">🗑 מחק</button></div>
-      ).join("");
-    }
-
-    async function deletePost(id) {
-      await supabaseFetch("posts", "DELETE", id);
-      alert("הפוסט נמחק!");
-      loadPosts();
-    }
-
-    document.getElementById("registerBtn").addEventListener("click", register);
-    document.getElementById("continueBtn").addEventListener("click", continueToLogin);
-    document.getElementById("loginBtn").addEventListener("click", login);
-    document.getElementById("logoutBtn").addEventListener("click", logout);
-
+    console.log("✅ קוד נטען בהצלחה!");
   </script>
 </body>
 </html>
