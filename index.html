@@ -55,7 +55,6 @@
     #regMessage { min-height: 20px; margin-top: 6px; color: #0a7a00; font-weight: bold; }
   </style>
 
-  <!-- Подключаем Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
@@ -107,9 +106,7 @@
 
   <div id="adminPanel" style="display:none;" class="box">
     <h2>⚙ ניהול מנהל</h2>
-    <h3>רשימת חשבונות</h3>
     <div id="usersList"></div>
-    <hr>
     <button id="clearAllBtn">🗑 מחק את כל הפוסטים</button>
   </div>
 
@@ -127,7 +124,6 @@
       if (!nickname) return alert("אנא הכנס שם");
 
       const code = Math.floor(100000000 + Math.random() * 900000000).toString();
-
       const { error } = await supabase.from('users').insert([{ code, name: nickname }]);
       if (error) {
         alert("שגיאה בהרשמה: " + error.message);
@@ -153,7 +149,7 @@
         return;
       }
 
-      const { data, error } = await supabase.from('users').select().eq('code', code).single();
+      const { data, error } = await supabase.from('users').select('*').eq('code', code).maybeSingle();
       if (error || !data) return alert("קוד שגוי!");
 
       savedCode = data.code;
@@ -161,7 +157,7 @@
       enterUser(false);
     }
 
-    // === שמירת פוסט ===
+    // === פוסטים ===
     async function savePost() {
       if (!savedCode) return alert("התחבר קודם!");
       const photo = document.getElementById("preview").src;
@@ -176,16 +172,22 @@
       showPosts();
     }
 
-    // === הצגת פוסטים ===
     async function showPosts() {
-      const { data } = await supabase.from('posts').select().order('created_at', { ascending: false });
+      const { data, error } = await supabase.from('posts').select('*');
       const list = document.getElementById("postsList");
       list.innerHTML = "";
+
+      if (error) {
+        list.innerHTML = "<p>שגיאה בטעינת פוסטים.</p>";
+        return;
+      }
+
       if (!data || data.length === 0) {
         list.innerHTML = "<p>אין עדיין פוסטים.</p>";
         return;
       }
-      data.forEach(p => {
+
+      data.reverse().forEach(p => {
         const canDelete = savedCode === "admin" || p.usercode === savedCode;
         list.innerHTML += `
           <div class="post">
@@ -235,7 +237,6 @@
     document.getElementById("registerBtn").onclick = register;
     document.getElementById("loginBtn").onclick = login;
     document.getElementById("savePostBtn").onclick = savePost;
-
     document.getElementById("copyCodeBtn").onclick = () => {
       navigator.clipboard.writeText(savedCode);
       alert("הקוד הועתק!");
