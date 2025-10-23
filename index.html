@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SchoolTrade</title>
-<link rel="icon" href="favicon.ico">
 <style>
 body {
   font-family: 'Arial', sans-serif;
@@ -92,29 +91,22 @@ video, img {
 <script type="module">
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
-// ====== Настройки Supabase ======
 const SUPABASE_URL = 'https://fxskzfjezoolsgqytumw.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ4c2t6Zmplem9vbHNncXl0dW13Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEwNTkzODksImV4cCI6MjA3NjYzNTM4OX0.MYIWkWhdVNzlqs53l4a4eJXQJeJpf0bD3kQQCDN-zrI';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ...D-zrI'; // твой anon key
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let savedCode = "", savedName = "";
 
-// ====== Авто-вход при перезагрузке ======
 window.addEventListener('load', async () => {
   const lastCode = localStorage.getItem('savedCode');
   if (lastCode) {
     savedCode = lastCode;
     const { data, error } = await supabase.from('users').select('name, photo').eq('code', savedCode).single();
-    if (data) {
-      savedName = data.name;
-      enterUser(data.photo);
-    } else {
-      localStorage.removeItem('savedCode');
-    }
+    if (data) { savedName = data.name; enterUser(data.photo); } 
+    else { localStorage.removeItem('savedCode'); }
   }
 });
 
-// ====== Регистрация ======
 async function register() {
   const nickname = document.getElementById("nickname").value.trim();
   if (!nickname) { document.getElementById("regMessage").innerText = "אנא הכנס שם משתמש"; return; }
@@ -132,13 +124,11 @@ async function register() {
   document.getElementById("regMessage").innerText = "נרשמת בהצלחה — שמור את הקוד!";
 }
 
-// ====== Продолжить ======
 function continueToLogin() {
   document.getElementById("registerBox").style.display = "none";
   document.getElementById("loginBox").style.display = "block";
 }
 
-// ====== Вход ======
 async function login() {
   const loginCode = document.getElementById("loginCode").value.trim();
   if (!loginCode) return;
@@ -152,7 +142,6 @@ async function login() {
   enterUser(data.photo);
 }
 
-// ====== Вход пользователя ======
 function enterUser(photo = null) {
   document.getElementById("loginBox").style.display = "none";
   document.getElementById("registerBox").style.display = "none";
@@ -167,7 +156,6 @@ function enterUser(photo = null) {
   }
 }
 
-// ====== Выход ======
 function logout() {
   document.getElementById("welcomeBox").style.display = "none";
   document.getElementById("registerBox").style.display = "block";
@@ -178,7 +166,6 @@ function logout() {
   localStorage.removeItem('savedCode');
 }
 
-// ====== Камера ======
 function startCamera() {
   const video = document.getElementById('camera');
   navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
@@ -186,7 +173,6 @@ function startCamera() {
     .catch(err => { console.warn('⚠ שגיאה במצלמה:', err); alert("אין גישה למצלמה — בדוק הרשאות."); });
 }
 
-// ====== Захват фото ======
 document.getElementById("capture").addEventListener("click", async () => {
   const video = document.getElementById('camera');
   const canvas = document.getElementById('photo');
@@ -201,24 +187,4 @@ document.getElementById("capture").addEventListener("click", async () => {
 
   if (savedCode) {
     const { error } = await supabase.from('users').update({ photo: dataUrl }).eq('code', savedCode);
-    if (error) console.error("❌ Ошибка при сохранении фото:", error);
-  }
-});
-
-// ====== Копирование кода ======
-document.getElementById("copyCodeBtn").addEventListener("click", () => {
-  const codeEl = document.getElementById("generatedCode");
-  navigator.clipboard.writeText(codeEl.innerText)
-    .then(() => alert("הקוד הועתק!"))
-    .catch(err => alert("לא ניתן להעתיק קוד"));
-});
-
-// ====== Слушатели ======
-document.getElementById("registerBtn").addEventListener("click", register);
-document.getElementById("continueBtn").addEventListener("click", continueToLogin);
-document.getElementById("loginBtn").addEventListener("click", login);
-document.getElementById("logoutBtn").addEventListener("click", logout);
-
-</script>
-</body>
-</html>
+    if (error) console.error("❌ Ошибка при сохранении фото:", error);
