@@ -48,7 +48,7 @@
       border-radius: 10px;
       margin-top: 10px;
     }
-    #regMessage {
+    #regMessage, #logMessage {
       min-height: 20px;
       margin-top: 6px;
       color: #0a7a00;
@@ -92,43 +92,43 @@
     <button id="logoutBtn">🔒 התנתק</button>
   </div>
 
-  <script>
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+
+    // ======= Настройки Supabase =======
+    const SUPABASE_URL = 'https://fxskzfjezoolsgqytumw.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ4c2t6Zmplem9vbHNncXl0dW13Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEwNTkzODksImV4cCI6MjA3NjYzNTM4OX0.MYIWkWhdVNzlqs53l4a4eJXQJeJpf0bD3kQQCDN-zrI';
+    const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
     // ======== Основные переменные ========
-    let users = JSON.parse(localStorage.getItem("users") || "{}");
     let savedCode = "", savedName = "";
 
-    function saveData() {
-      localStorage.setItem("users", JSON.stringify(users));
-    }
-
     // ======== Регистрация ========
-    function register() {
-      try {
-        const nickname = document.getElementById("nickname").value.trim();
-        if (!nickname) {
-          document.getElementById("regMessage").innerText = "אנא הכנס שם משתמש";
-          return;
-        }
-
-        let code;
-        do {
-          code = Math.floor(100000000 + Math.random() * 900000000).toString();
-        } while (users[code]);
-
-        users[code] = { name: nickname };
-        saveData();
-
-        savedName = nickname;
-        savedCode = code;
-
-        document.getElementById("generatedCode").innerText = code;
-        document.getElementById("showCodeBox").style.display = "block";
-        document.getElementById("regMessage").innerText = "נרשמת בהצלחה — שמור את הקוד!";
-        console.log("✅ Регистрация успешна:", nickname, code);
-      } catch (err) {
-        console.error("❌ Ошибка в register():", err);
-        alert("שגיאה בהרשמה — בדוק את הקונסול!");
+    async function register() {
+      const nickname = document.getElementById("nickname").value.trim();
+      if (!nickname) {
+        document.getElementById("regMessage").innerText = "אנא הכנס שם משתמש";
+        return;
       }
+
+      let code;
+      do { code = Math.floor(100000000 + Math.random() * 900000000).toString(); }
+      while (false); // тут проверка на существование в Supabase можно сделать, если нужно
+
+      savedCode = code;
+      savedName = nickname;
+
+      // Сохраняем в Supabase
+      const { error } = await supabase.from('users').insert([{ code, name: nickname }]);
+      if (error) {
+        alert("שגיאה בהרשמה — בדוק את הקונסול");
+        console.error(error);
+        return;
+      }
+
+      document.getElementById("generatedCode").innerText = code;
+      document.getElementById("showCodeBox").style.display = "block";
+      document.getElementById("regMessage").innerText = "נרשמת בהצלחה — שמור את הקוד!";
     }
 
     // ======== Продолжить ========
@@ -138,27 +138,34 @@
     }
 
     // ======== Вход ========
-    function login() {
-      try {
-        const loginCode = document.getElementById("loginCode").value.trim();
-        if (users[loginCode]) {
-          savedCode = loginCode;
-          savedName = users[loginCode].name;
-          enterUser();
-        } else {
-          document.getElementById("logMessage").innerText = "קוד שגוי!";
-        }
-      } catch (err) {
-        console.error("❌ Ошибка в login():", err);
+    async function login() {
+      const loginCode = document.getElementById("loginCode").value.trim();
+      if (!loginCode) return;
+
+      savedCode = loginCode;
+
+      const { data, error } = await supabase.from('users').select('name, photo').eq('code', savedCode).single();
+      if (error || !data) {
+        document.getElementById("logMessage").innerText = "קוד שגוי!";
+        return;
       }
+
+      savedName = data.name;
+      enterUser(data.photo);
     }
 
     // ======== Вход пользователя ========
-    function enterUser() {
+    function enterUser(photo = null) {
       document.getElementById("loginBox").style.display = "none";
       document.getElementById("welcomeBox").style.display = "block";
       document.getElementById("welcomeText").innerText = "ברוך הבא, " + savedName + "!";
       startCamera();
+
+      if (photo) {
+        const preview = document.getElementById('preview');
+        preview.src = photo;
+        preview.style.display = 'block';
+      }
     }
 
     // ======== Выход ========
@@ -182,20 +189,23 @@
         });
     }
 
-    // ======== Захват фото ========
-    document.getElementById("capture").addEventListener("click", () => {
+    // ======== Захват фото и сохранение в Supabase ========
+    document.getElementById("capture").addEventListener("click", async () => {
       const video = document.getElementById('camera');
       const canvas = document.getElementById('photo');
       const preview = document.getElementById('preview');
-      try {
-        const ctx = canvas.getContext('2d');
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        preview.src = canvas.toDataURL('image/png');
-        preview.style.display = 'block';
-      } catch (err) {
-        console.error("❌ Ошибка при съёмке:", err);
+      const ctx = canvas.getContext('2d');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const dataUrl = canvas.toDataURL('image/png');
+      preview.src = dataUrl;
+      preview.style.display = 'block';
+
+      // сохраняем в Supabase
+      if (savedCode) {
+        const { error } = await supabase.from('users').update({ photo: dataUrl }).eq('code', savedCode);
+        if (error) console.error("❌ Ошибка при сохранении фото:", error);
       }
     });
 
@@ -212,8 +222,6 @@
     document.getElementById("continueBtn").addEventListener("click", continueToLogin);
     document.getElementById("loginBtn").addEventListener("click", login);
     document.getElementById("logoutBtn").addEventListener("click", logout);
-
-    console.log("✅ קוד נטען בהצלחה!");
   </script>
 </body>
 </html>
