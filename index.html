@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html lang="he" dir="rtl">
+<html lang="he">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>schooltrade</title>
 <style>
 body {
-  font-family: 'Arial', sans-serif;
+  font-family: Arial, sans-serif;
   background: linear-gradient(135deg, #f0f4ff, #d9e7ff);
   text-align: center;
   direction: rtl;
@@ -14,7 +14,7 @@ body {
   color: #222;
 }
 .box {
-  background: #ffffff;
+  background: #fff;
   padding: 20px;
   margin: 20px auto;
   border-radius: 14px;
@@ -46,129 +46,156 @@ button {
 button:hover { background: #005fcc; }
 video, canvas, img { width: 100%; max-width: 360px; border-radius: 10px; margin-top: 10px; }
 #allPosts { margin-bottom: 120px; }
-#createPost {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: #fff;
-  box-shadow: 0 -2px 12px rgba(0,0,0,0.08);
-  padding: 8px;
-  border-top: 1px solid #ddd;
-  max-width: 420px;
-  margin: 0 auto;
-  text-align: center;
-}
-#togglePostBox { width: 95%; padding: 8px; background: #0078ff; color:white; border-radius:8px; cursor:pointer; }
-#togglePostBox:hover { background:#005fcc; }
-.post { background:#fff; margin:10px auto; padding:10px; border-radius:10px; box-shadow:0 0 6px rgba(0,0,0,0.06); max-width:380px; text-align:right; }
-.post img { width:100%; border-radius:8px; }
-.comment-section { margin-top:10px; background:#f8faff; border-radius:8px; padding:6px; }
-.comment { text-align:right; border-bottom:1px solid #eee; padding:4px 0; font-size:14px; }
-.comment-input { display:flex; justify-content:space-between; margin-top:6px; }
-.comment-input input { width:75%; padding:6px; border-radius:6px; border:1px solid #ccc; }
-.comment-input button { width:20%; font-size:13px; padding:6px; }
-#regMessage { min-height:20px; margin-top:6px; color:#0a7a00; font-weight:bold; }
-.user-row { display:flex; justify-content:space-between; align-items:center; margin:4px 0; }
-.user-delete { background:#ff4d4f; color:white; padding:4px 8px; border-radius:4px; cursor:pointer; }
-.user-delete:hover { background:#cc0000; }
+#createPost { position: fixed; bottom: 0; left:0; right:0; background:#fff; padding:8px; border-top:1px solid #ddd; max-width:420px; margin:0 auto; text-align:center; box-shadow:0 -2px 12px rgba(0,0,0,0.08);}
+#togglePostBox {width:95%; padding:8px; background:#0078ff; color:white; border-radius:8px; cursor:pointer;}
+#togglePostBox:hover {background:#005fcc;}
+.post {background:#fff; margin:10px auto; padding:10px; border-radius:10px; box-shadow:0 0 6px rgba(0,0,0,0.06); max-width:380px; text-align:right;}
+.post img {width:100%; border-radius:8px;}
+.comment-section {margin-top:10px; background:#f8faff; border-radius:8px; padding:6px;}
+.comment {text-align:right; border-bottom:1px solid #eee; padding:4px 0; font-size:14px;}
+.comment-input {display:flex; justify-content:space-between; margin-top:6px;}
+.comment-input input {width:75%; padding:6px; border-radius:6px; border:1px solid #ccc;}
+.comment-input button {width:20%; font-size:13px; padding:6px;}
+#regMessage {min-height:20px; margin-top:6px; color:#0a7a00; font-weight:bold;}
 </style>
 </head>
 <body>
 
 <div class="box" id="registerBox">
-<h2>הרשמה</h2>
-<input type="text" id="nickname" placeholder="הכנס שם ושם משפחה שלך">
-<button id="registerBtn">הירשם</button>
-<div id="regMessage"></div>
-<div id="showCodeBox" style="display:none;">
-<p>הקוד שלך:</p>
-<h3 id="generatedCode"></h3>
-<button id="copyCodeBtn">העתק קוד</button>
-<p>שמור את הקוד — תצטרך אותו כדי להתחבר!</p>
-<button id="continueBtn">המשך</button>
-</div>
+  <h2>הרשמה</h2>
+  <input type="text" id="nickname" placeholder="הכנס שם ושם משפחה">
+  <button id="registerBtn">הירשם</button>
+  <div id="regMessage"></div>
+  <div id="showCodeBox" style="display:none;">
+    <p>הקוד שלך:</p>
+    <h3 id="generatedCode"></h3>
+    <button id="copyCodeBtn">העתק קוד</button>
+    <p>שמור את הקוד — תצטרך אותו כדי להתחבר!</p>
+    <button id="continueBtn">המשך</button>
+  </div>
 </div>
 
 <div class="box" id="loginBox" style="display:none;">
-<h2>התחברות</h2>
-<input type="text" id="loginCode" placeholder="הכנס את הקוד">
-<button id="loginBtn">התחבר</button>
-<div id="logMessage"></div>
+  <h2>התחברות</h2>
+  <input type="text" id="loginCode" placeholder="הכנס את הקוד">
+  <button id="loginBtn">התחבר</button>
+  <div id="logMessage"></div>
 </div>
 
 <div class="box" id="welcomeBox" style="display:none;">
-<h2 id="welcomeText"></h2>
-<video id="camera" autoplay playsinline></video><br>
-<button id="capture">📸 צלם תמונה</button>
-<canvas id="photo" style="display:none;"></canvas>
-<img id="preview" alt="תצוגה מקדימה" style="display:none;"><br>
-<button id="logoutBtn">🔒 התנתק</button>
+  <h2 id="welcomeText"></h2>
+  <video id="camera" autoplay playsinline></video><br>
+  <button id="capture">📸 צלם תמונה</button>
+  <canvas id="photo" style="display:none;"></canvas>
+  <img id="preview" style="display:none;"><br>
+  <button id="logoutBtn">🔒 התנתק</button>
 </div>
 
 <div id="allPosts" style="display:none;">
-<h2>🖼 פוסטים של משתמשים</h2>
-<div id="postsList"></div>
+  <h2>🖼 פוסטים של משתמשים</h2>
+  <div id="postsList"></div>
 </div>
 
 <div id="createPost" style="display:none;">
-<button id="togglePostBox">✏ פרסם פוסט</button>
-<div id="postBox" style="display:none; margin-top:10px;">
-<textarea id="description" placeholder="כתוב תיאור או מקום מפגש"></textarea><br>
-<input type="number" id="price" placeholder="מחיר (₪)"><br>
-<button id="savePostBtn">📤 פרסם</button>
-</div>
+  <button id="togglePostBox">✏ פרסם פוסט</button>
+  <div id="postBox" style="display:none; margin-top:10px;">
+    <textarea id="description" placeholder="כתוב תיאור או מקום מפגש"></textarea><br>
+    <input type="number" id="price" placeholder="מחיר (₪)"><br>
+    <button id="savePostBtn">📤 פרסם</button>
+  </div>
 </div>
 
-<div id="adminPanel" style="display:none;" class="box">
-<h2>⚙ ניהול מנהל</h2>
-<h3>רשימת חשבונות</h3>
-<div id="usersList"></div>
-<hr>
-<button id="clearAllBtn">🗑 מחק את כל הפוסטים</button>
+<div id="adminPanel" class="box" style="display:none;">
+  <h2>⚙ ניהול מנהל</h2>
+  <h3>רשימת חשבונות</h3>
+  <div id="usersList"></div>
+  <hr>
+  <button id="clearAllBtn">🗑 מחק את כל הפוסטים</button>
 </div>
 
 <script>
-let users = {}; 
-let posts = [];
-let savedCode = "", savedName = "";
+document.addEventListener("DOMContentLoaded", () => {
+  let users = {};
+  let posts = [];
+  let savedCode = "";
+  let savedName = "";
 
-function saveData(){ localStorage.setItem("users", JSON.stringify(users)); localStorage.setItem("posts", JSON.stringify(posts)); }
-function register(){
-  const nickname = document.getElementById("nickname").value.trim();
-  if(!nickname){ document.getElementById("regMessage").innerText="אנא הכנס שם משתמש"; return; }
-  let code; do{ code=Math.floor(100000000+Math.random()*900000000).toString(); }while(users[code]);
-  users[code]={name:nickname}; saveData();
-  savedName=nickname; savedCode=code;
-  document.getElementById("generatedCode").innerText=code;
-  document.getElementById("showCodeBox").style.display="block";
-  document.getElementById("regMessage").innerText="נרשמת בהצלחה — שמור את הקוד!";
-}
-document.getElementById("continueBtn").addEventListener("click",()=>{ document.getElementById("registerBox").style.display="none"; document.getElementById("loginBox").style.display="block"; });
-document.getElementById("registerBtn").addEventListener("click",register);
+  const registerBtn = document.getElementById("registerBtn");
+  const loginBtn = document.getElementById("loginBtn");
+  const savePostBtn = document.getElementById("savePostBtn");
+  const logoutBtn = document.getElementById("logoutBtn");
+  const copyCodeBtn = document.getElementById("copyCodeBtn");
+  const continueBtn = document.getElementById("continueBtn");
+  const togglePostBox = document.getElementById("togglePostBox");
 
-function login(){
-  const loginCode=document.getElementById("loginCode").value.trim();
-  document.getElementById("logMessage").innerText="";
-  if(loginCode==="admin"||loginCode==="michaelrodov"){ savedCode=loginCode; savedName=loginCode; enterUser(true); return; }
-  if(users[loginCode]){ savedCode=loginCode; savedName=users[loginCode].name; enterUser(false); }
-  else document.getElementById("logMessage").innerText="קוד שגוי!";
-}
-document.getElementById("loginBtn").addEventListener("click",login);
+  function generateCode() {
+    let code;
+    do { code = Math.floor(100000000 + Math.random()*900000000).toString(); } 
+    while(users[code]);
+    return code;
+  }
 
-function enterUser(isAdmin){
-  document.getElementById("loginBox").style.display="none";
-  document.getElementById("registerBox").style.display="none";
-  document.getElementById("welcomeBox").style.display="block";
-  document.getElementById("allPosts").style.display="block";
-  document.getElementById("createPost").style.display=isAdmin?"none":"block";
-  document.getElementById("welcomeText").innerText="ברוך הבא, "+savedName+"!";
-  document.getElementById("adminPanel").style.display=isAdmin?"block":"none";
-  if(!isAdmin) startCamera();
-  showPosts();
-  if(isAdmin) showUsersList();
-}
-document.getElementById("logoutBtn").addEventListener("click",()=>{ logout(); });
+  function showPosts() {
+    const container = document.getElementById("postsList");
+    container.innerHTML = "";
+    posts.slice().reverse().forEach(p=>{
+      const isAdmin = savedCode==="admin" || savedCode==="michaelrodov";
+      const canDelete = isAdmin || p.ownerCode===savedCode;
+      const deleteBtn = canDelete ? <button onclick="deletePost('${p.id}')">❌ מחק</button> : "";
+      let commentsHTML = "";
+      p.comments?.forEach(c=>{commentsHTML+=<div class="comment"><b>${c.name}:</b> ${c.text}</div>});
+      container.innerHTML+=`
+        <div class="post">
+          <img src="${p.photo}">
+          <h4>${p.name}</h4>
+          <p>${p.desc}</p>
+          <p>💰 ${p.price?p.price+" ₪":"ללא מחיר"}</p>
+          ${deleteBtn}
+          <div class="comment-section">${commentsHTML}</div>
+        </div>`;
+    });
+  }
 
-function logout(){
-  document.getElementById("welcomeBox").style.display="none
+  function enterUser(isAdmin){
+    document.getElementById("registerBox").style.display="none";
+    document.getElementById("loginBox").style.display="none";
+    document.getElementById("welcomeBox").style.display="block";
+    document.getElementById("allPosts").style.display="block";
+    document.getElementById("createPost").style.display=isAdmin?"none":"block";
+    document.getElementById("adminPanel").style.display=isAdmin?"block":"none";
+    document.getElementById("welcomeText").innerText="ברוך הבא "+savedName;
+    showPosts();
+  }
+
+  function logout(){
+    savedCode="";
+    savedName="";
+    document.getElementById("registerBox").style.display="block";
+    document.getElementById("loginBox").style.display="none";
+    document.getElementById("welcomeBox").style.display="none";
+    document.getElementById("allPosts").style.display="none";
+    document.getElementById("createPost").style.display="none";
+    document.getElementById("adminPanel").style.display="none";
+  }
+
+  function register(){
+    const nickname=document.getElementById("nickname").value.trim();
+    if(!nickname){document.getElementById("regMessage").innerText="אנא הכנס שם ושם משפחה";return;}
+    const code=generateCode();
+    users[code]={name:nickname};
+    savedCode=code;
+    savedName=nickname;
+    document.getElementById("generatedCode").innerText=code;
+    document.getElementById("showCodeBox").style.display="block";
+    document.getElementById("regMessage").innerText="נרשמת בהצלחה!";
+  }
+
+  function login(){
+    const code=document.getElementById("loginCode").value.trim();
+    if(!code) return;
+    if(code==="admin"||code==="michaelrodov"){savedCode=code;savedName=code;enterUser(true);return;}
+    if(users[code]){savedCode=code;savedName=users[code].name;enterUser(false);}
+    else document.getElementById("logMessage").innerText="קוד שגוי!";
+  }
+
+  function save
