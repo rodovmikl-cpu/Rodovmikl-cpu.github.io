@@ -1,104 +1,118 @@
 <!DOCTYPE html>
 <html lang="he">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>SchoolTrade</title>
-  <link rel="icon" href="favicon.ico"> <!-- убирает 404 -->
-  <style>
-    body {
-      font-family: 'Arial', sans-serif;
-      background: linear-gradient(135deg, #f0f4ff, #d9e7ff);
-      text-align: center;
-      direction: rtl;
-      margin-bottom: 220px;
-      color: #222;
-    }
-    .box {
-      background: #ffffff;
-      padding: 20px;
-      margin: 20px auto;
-      border-radius: 14px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-      max-width: 420px;
-    }
-    input, textarea {
-      width: 90%;
-      padding: 10px;
-      margin: 8px 0;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-      text-align: center;
-      font-size: 15px;
-    }
-    button {
-      padding: 10px 16px;
-      border: none;
-      background: #0078ff;
-      color: white;
-      border-radius: 8px;
-      cursor: pointer;
-      margin: 6px;
-      font-weight: bold;
-      transition: 0.3s;
-    }
-    button:hover { background: #005fcc; }
-    video, img {
-      width: 100%;
-      max-width: 360px;
-      border-radius: 10px;
-      margin-top: 10px;
-    }
-    #regMessage, #logMessage {
-      min-height: 20px;
-      margin-top: 6px;
-      color: #0a7a00;
-      font-weight: bold;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SchoolTrade</title>
+<link rel="icon" href="favicon.ico">
+<style>
+body {
+  font-family: 'Arial', sans-serif;
+  background: linear-gradient(135deg, #f0f4ff, #d9e7ff);
+  text-align: center;
+  direction: rtl;
+  margin-bottom: 220px;
+  color: #222;
+}
+.box {
+  background: #ffffff;
+  padding: 20px;
+  margin: 20px auto;
+  border-radius: 14px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  max-width: 420px;
+}
+input, textarea {
+  width: 90%;
+  padding: 10px;
+  margin: 8px 0;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  text-align: center;
+  font-size: 15px;
+}
+button {
+  padding: 10px 16px;
+  border: none;
+  background: #0078ff;
+  color: white;
+  border-radius: 8px;
+  cursor: pointer;
+  margin: 6px;
+  font-weight: bold;
+  transition: 0.3s;
+}
+button:hover { background: #005fcc; }
+video, img {
+  width: 100%;
+  max-width: 360px;
+  border-radius: 10px;
+  margin-top: 10px;
+}
+#regMessage, #logMessage {
+  min-height: 20px;
+  margin-top: 6px;
+  color: #0a7a00;
+  font-weight: bold;
+}
+</style>
 </head>
 <body>
 
 <div class="box" id="registerBox">
-  <h2>הרשמה</h2>
-  <input type="text" id="nickname" placeholder="הכנס שם ושם משפחה שלך">
-  <button id="registerBtn">הרשם</button>
-  <div id="regMessage"></div>
-
-  <div id="showCodeBox" style="display:none;">
-    <p>הקוד שלך:</p>
-    <h3 id="generatedCode"></h3>
-    <button id="copyCodeBtn">העתק קוד</button>
-    <p>שמור את הקוד — תצטרך אותו כדי להתחבר!</p>
-    <button id="continueBtn">המשך</button>
-  </div>
+<h2>הרשמה</h2>
+<input type="text" id="nickname" placeholder="הכנס שם ושם משפחה שלך">
+<button id="registerBtn">הרשם</button>
+<div id="regMessage"></div>
+<div id="showCodeBox" style="display:none;">
+  <p>הקוד שלך:</p>
+  <h3 id="generatedCode"></h3>
+  <button id="copyCodeBtn">העתק קוד</button>
+  <p>שמור את הקוד — תצטרך אותו כדי להתחבר!</p>
+  <button id="continueBtn">המשך</button>
+</div>
 </div>
 
 <div class="box" id="loginBox" style="display:none;">
-  <h2>התחברות</h2>
-  <input type="text" id="loginCode" placeholder="הכנס את הקוד">
-  <button id="loginBtn">התחבר</button>
-  <div id="logMessage"></div>
+<h2>התחברות</h2>
+<input type="text" id="loginCode" placeholder="הכנס את הקוד">
+<button id="loginBtn">התחבר</button>
+<div id="logMessage"></div>
 </div>
 
 <div class="box" id="welcomeBox" style="display:none;">
-  <h2 id="welcomeText"></h2>
-  <video id="camera" autoplay playsinline></video><br>
-  <button id="capture">📸 צלם תמונה</button>
-  <canvas id="photo" style="display:none;"></canvas>
-  <img id="preview" style="display:none;">
-  <button id="logoutBtn">🔒 התנתק</button>
+<h2 id="welcomeText"></h2>
+<video id="camera" autoplay playsinline></video><br>
+<button id="capture">📸 צלם תמונה</button>
+<canvas id="photo" style="display:none;"></canvas>
+<img id="preview" style="display:none;">
+<button id="logoutBtn">🔒 התנתק</button>
 </div>
 
 <script type="module">
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
-// ====== Supabase настройки ======
+// ====== Настройки Supabase ======
 const SUPABASE_URL = 'https://fxskzfjezoolsgqytumw.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ4c2t6Zmplem9vbHNncXl0dW13Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEwNTkzODksImV4cCI6MjA3NjYzNTM4OX0.MYIWkWhdVNzlqs53l4a4eJXQJeJpf0bD3kQQCDN-zrI';
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let savedCode = "", savedName = "";
+
+// ====== Авто-вход при перезагрузке ======
+window.addEventListener('load', async () => {
+  const lastCode = localStorage.getItem('savedCode');
+  if (lastCode) {
+    savedCode = lastCode;
+    const { data, error } = await supabase.from('users').select('name, photo').eq('code', savedCode).single();
+    if (data) {
+      savedName = data.name;
+      enterUser(data.photo);
+    } else {
+      localStorage.removeItem('savedCode');
+    }
+  }
+});
 
 // ====== Регистрация ======
 async function register() {
@@ -108,9 +122,10 @@ async function register() {
   savedCode = Math.floor(100000000 + Math.random() * 900000000).toString();
   savedName = nickname;
 
-  // Важно: в Supabase должна быть политика insert для anon ключа, иначе 42501
   const { error } = await supabase.from('users').insert([{ code: savedCode, name: nickname }]);
   if (error) { console.error(error); alert("שגיאה בהרשמה — בדוק את הקונסול"); return; }
+
+  localStorage.setItem('savedCode', savedCode);
 
   document.getElementById("generatedCode").innerText = savedCode;
   document.getElementById("showCodeBox").style.display = "block";
@@ -133,12 +148,14 @@ async function login() {
   if (error || !data) { document.getElementById("logMessage").innerText = "קוד שגוי!"; return; }
 
   savedName = data.name;
+  localStorage.setItem('savedCode', savedCode);
   enterUser(data.photo);
 }
 
 // ====== Вход пользователя ======
 function enterUser(photo = null) {
   document.getElementById("loginBox").style.display = "none";
+  document.getElementById("registerBox").style.display = "none";
   document.getElementById("welcomeBox").style.display = "block";
   document.getElementById("welcomeText").innerText = "ברוך הבא, " + savedName + "!";
   startCamera();
@@ -158,6 +175,7 @@ function logout() {
   document.getElementById("nickname").value = "";
   savedCode = "";
   savedName = "";
+  localStorage.removeItem('savedCode');
 }
 
 // ====== Камера ======
