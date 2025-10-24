@@ -1,61 +1,24 @@
 <!DOCTYPE html>
 <html lang="he">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>SchoolTrade</title>
-  <link rel="icon" href="data:,"> <!-- пустой favicon чтобы не было 404 -->
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>SchoolTrade — with Supabase</title>
+  <link rel="icon" href="data:,">
   <style>
-    body {
-      font-family: 'Arial', sans-serif;
-      background: linear-gradient(135deg, #f0f4ff, #d9e7ff);
-      text-align: center;
-      direction: rtl;
-      margin-bottom: 220px;
-      color: #222;
-    }
-    .box {
-      background: #ffffff;
-      padding: 20px;
-      margin: 20px auto;
-      border-radius: 14px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-      max-width: 420px;
-    }
-    input, textarea {
-      width: 90%;
-      padding: 10px;
-      margin: 8px 0;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-      text-align: center;
-      font-size: 15px;
-    }
-    button {
-      padding: 10px 16px;
-      border: none;
-      background: #0078ff;
-      color: white;
-      border-radius: 8px;
-      cursor: pointer;
-      margin: 6px;
-      font-weight: bold;
-      transition: 0.3s;
-    }
-    button:hover { background: #005fcc; }
-    video, img {
-      width: 100%;
-      max-width: 360px;
-      border-radius: 10px;
-      margin-top: 10px;
-    }
-    #regMessage, #logMessage {
-      min-height: 20px;
-      margin-top: 6px;
-      font-weight: bold;
-    }
-    #regMessage { color: #0a7a00; }
-    #logMessage { color: red; }
+    body { font-family:'Arial',sans-serif; background:linear-gradient(135deg,#f0f4ff,#d9e7ff); text-align:center; direction:rtl; margin-bottom:220px; color:#222; }
+    .box{ background:#fff; padding:20px; margin:20px auto; border-radius:14px; box-shadow:0 4px 12px rgba(0,0,0,.1); max-width:420px; }
+    input,textarea{ width:90%; padding:10px; margin:8px 0; border-radius:8px; border:1px solid #ccc; text-align:center; font-size:15px; }
+    button{ padding:10px 16px; border:none; background:#0078ff; color:#fff; border-radius:8px; cursor:pointer; margin:6px; font-weight:bold; transition:.2s; }
+    button:hover{ background:#005fcc; }
+    .deleteBtn{ background:#ff5252; }
+    .deleteBtn:hover{ background:#c62828; }
+    video,img,canvas{ width:100%; max-width:360px; border-radius:10px; margin-top:10px; }
+    .list-item{ display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:1px solid #eee; text-align:right; }
+    .post-row img{ max-width:120px; border-radius:8px; display:inline-block; vertical-align:middle; margin-left:8px; }
+    .post-row .meta{ text-align:right; display:inline-block; vertical-align:middle; }
+    #regMessage,#logMessage,#adminMsg{ min-height:20px; margin-top:6px; font-weight:bold; color:#0a7a00; }
+    .small{ font-size:12px; color:#666; }
   </style>
 </head>
 <body>
@@ -63,7 +26,7 @@
   <!-- регистрация -->
   <div class="box" id="registerBox">
     <h2>הרשמה</h2>
-    <input type="text" id="nickname" placeholder="הכנס שם ושם משפחה שלך">
+    <input id="nickname" placeholder="הכנס שם ושם משפחה שלך" />
     <button id="registerBtn">הרשם</button>
     <div id="regMessage"></div>
 
@@ -71,7 +34,7 @@
       <p>הקוד שלך:</p>
       <h3 id="generatedCode"></h3>
       <button id="copyCodeBtn">העתק קוד</button>
-      <p>שמור את הקוד — תצטרך אותו כדי להתחבר!</p>
+      <p class="small">שמור את הקוד — תצטרך אותו כדי להתחבר!</p>
       <button id="continueBtn">המשך</button>
     </div>
   </div>
@@ -79,143 +42,422 @@
   <!-- вход -->
   <div class="box" id="loginBox" style="display:none;">
     <h2>התחברות</h2>
-    <input type="text" id="loginCode" placeholder="הכנס את הקוד">
+    <input id="loginCode" placeholder="הכנס את הקוד" />
     <button id="loginBtn">התחבר</button>
     <div id="logMessage"></div>
   </div>
 
-  <!-- приветствие -->
+  <!-- приветствие + камера -->
   <div class="box" id="welcomeBox" style="display:none;">
     <h2 id="welcomeText"></h2>
     <video id="camera" autoplay playsinline></video><br>
     <button id="capture">📸 צלם תמונה</button>
     <canvas id="photo" style="display:none;"></canvas>
-    <img id="preview" style="display:none;">
-    <button id="logoutBtn">🔒 התנתק</button>
+    <img id="preview" style="display:none;" alt="preview" />
+    <div style="margin-top:8px;">
+      <button id="savePostBtn" style="display:none;">💾 שמור פוסט (העלה ל־Supabase)</button>
+      <button id="logoutBtn">🔒 התנתק</button>
+    </div>
   </div>
 
-  <!-- Supabase JS SDK -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/supabase.min.js"></script>
+  <!-- все посты -->
+  <div class="box" id="allPosts" style="display:none;">
+    <h2>🖼 פוסטים של משתמשים</h2>
+    <div id="postsList"></div>
+  </div>
+
+  <!-- админ -->
+  <div class="box" id="adminBox" style="display:none;">
+    <h2>⚙ ניהול מנהל</h2>
+    <h3>רשימת חשבונות</h3>
+    <div id="usersList"></div>
+    <hr />
+    <h3>פוסטים:</h3>
+    <div id="adminPostsList"></div>
+    <div id="adminMsg"></div>
+    <div style="margin-top:8px;">
+      <button id="clearAllBtn">🗑 מחק את כל הפוסטים</button>
+      <button id="exitAdminBtn">🔙 חזור</button>
+    </div>
+  </div>
+
+  <!-- Supabase SDK (CDN) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.35.0/dist/supabase.min.js"></script>
+
   <script>
-    // ====== Supabase ======
-    const supabaseUrl = 'https://fxskzfjezoolsgqytumw.supabase.co';
-    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ4c2t6Zmplem9vbHNncXl0dW13Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEwNTkzODksImV4cCI6MjA3NjYzNTM4OX0.MYIWkWhdVNzlqs53l4a4eJXQJeJpf0bD3kQQCDN-zrI';
-    const supabase = Supabase.createClient(supabaseUrl, supabaseKey);
+    // ====== Вставлен твой Supabase URL и Key (как ты просил) ======
+    const SUPABASE_URL = "https://fxskzfjezoolsgqytumw.supabase.co";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ4c2t6Zmplem9vbHNncXl0dW13Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEwNTkzODksImV4cCI6MjA3NjYzNTM4OX0.MYIWkWhdVNzlqs53l4a4eJXQJeJpf0bD3kQQCDN-zrI";
+    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // ======== Основные переменные ========
-    let savedCode = "", savedName = "";
+    // local storage (сохраняем копию локально как у тебя было)
+    let users = JSON.parse(localStorage.getItem("users") || "{}");
+    let posts = JSON.parse(localStorage.getItem("posts") || "[]");
 
-    // ======== Регистрация ========
-    async function register() {
-      const nickname = document.getElementById("nickname").value.trim();
-      if (!nickname) {
-        document.getElementById("regMessage").innerText = "אנא הכנס שם משתמש";
-        return;
-      }
+    let savedCode = "";
+    let savedName = "";
 
-      let code = Math.floor(100000000 + Math.random() * 900000000).toString();
+    function saveLocal(){
+      localStorage.setItem("users", JSON.stringify(users));
+      localStorage.setItem("posts", JSON.stringify(posts));
+    }
 
-      // Проверка на уникальность в Supabase
-      const { data: existing } = await supabase.from('users').select('code').eq('code', code);
-      if (existing && existing.length > 0) code = Math.floor(100000000 + Math.random() * 900000000).toString();
+    // ---------- Регистрация ----------
+    document.getElementById("registerBtn").addEventListener("click", async () => {
+      const nickname = (document.getElementById("nickname").value || "").trim();
+      if(!nickname){ document.getElementById("regMessage").innerText = "אנא הכנס שם משתמש"; return; }
 
-      const { error } = await supabase.from('users').insert([{ code, name: nickname }]);
-      if (error) {
-        console.error('Ошибка при регистрации:', error);
-        alert('שגיאה בהרשמה — בדוק את הקונסול!');
-        return;
-      }
+      let code;
+      do { code = Math.floor(100000000 + Math.random()*900000000).toString(); } while(users[code]);
 
-      savedName = nickname;
+      users[code] = { name: nickname };
+      saveLocal();
+
+      // сохраняем в Supabase (только попытка — если есть конфликт, просто логируем)
+      try {
+        const { error } = await supabase.from('users').insert([{ id: code, name: nickname }]);
+        if(error && !/duplicate/i.test(error.message)){ console.warn("supabase users insert error:", error); }
+      } catch(e){ console.error("supabase users insert exception:", e); }
+
       savedCode = code;
+      savedName = nickname;
 
       document.getElementById("generatedCode").innerText = code;
       document.getElementById("showCodeBox").style.display = "block";
       document.getElementById("regMessage").innerText = "נרשמת בהצלחה — שמור את הקוד!";
-    }
+    });
 
-    // ======== Продолжить ========
-    function continueToLogin() {
+    document.getElementById("continueBtn").addEventListener("click", () => {
       document.getElementById("registerBox").style.display = "none";
       document.getElementById("loginBox").style.display = "block";
-    }
+    });
 
-    // ======== Вход ========
-    async function login() {
-      const loginCode = document.getElementById("loginCode").value.trim();
-      const { data, error } = await supabase.from('users').select('name').eq('code', loginCode).single();
-      if (error || !data) {
-        document.getElementById("logMessage").innerText = "קוד שגוי!";
+    // ---------- Login ----------
+    document.getElementById("loginBtn").addEventListener("click", async () => {
+      const loginCode = (document.getElementById("loginCode").value || "").trim();
+      document.getElementById("logMessage").innerText = "";
+      if(!loginCode){ document.getElementById("logMessage").innerText = "הכנס קוד!"; return; }
+
+      if(loginCode === "admin"){
+        savedCode = loginCode; savedName = loginCode;
+        // show admin panel
+        document.getElementById("loginBox").style.display = "none";
+        document.getElementById("adminBox").style.display = "block";
+        await renderUsersList();
+        await renderAdminPosts();
         return;
       }
-      savedCode = loginCode;
-      savedName = data.name;
-      enterUser();
-    }
 
-    // ======== Вход пользователя ========
-    function enterUser() {
+      // проверяем локально — так как ты хотел сохранить прежнее поведение
+      if(users[loginCode]){
+        savedCode = loginCode;
+        savedName = users[loginCode].name;
+        enterUser();
+        return;
+      }
+
+      // как запасной вариант, можно попробовать загрузить пользователя из supabase
+      try {
+        const { data, error } = await supabase.from('users').select('id,name').eq('id', loginCode).limit(1).maybeSingle();
+        if(error){ console.warn("supabase users select error:", error); }
+        if(data && data.id){
+          users[data.id] = { name: data.name };
+          saveLocal();
+          savedCode = data.id;
+          savedName = data.name;
+          enterUser();
+          return;
+        }
+      } catch(e){ console.error(e); }
+
+      document.getElementById("logMessage").innerText = "קוד שגוי!";
+    });
+
+    function enterUser(){
       document.getElementById("loginBox").style.display = "none";
       document.getElementById("welcomeBox").style.display = "block";
+      document.getElementById("allPosts").style.display = "block";
       document.getElementById("welcomeText").innerText = "ברוך הבא, " + savedName + "!";
       startCamera();
+      // показать список постов (берём из Supabase + local)
+      fetchAndShowPosts();
     }
 
-    // ======== Выход ========
-    function logout() {
+    document.getElementById("logoutBtn").addEventListener("click", () => {
+      logout();
+    });
+
+    function logout(){
       document.getElementById("welcomeBox").style.display = "none";
+      document.getElementById("adminBox").style.display = "none";
+      document.getElementById("allPosts").style.display = "none";
       document.getElementById("registerBox").style.display = "block";
       document.getElementById("showCodeBox").style.display = "none";
       document.getElementById("nickname").value = "";
-      savedCode = "";
-      savedName = "";
+      savedCode = ""; savedName = "";
     }
 
-    // ======== Камера ========
-    function startCamera() {
+    // ---------- Камера и фото ----------
+    async function startCamera(){
       const video = document.getElementById('camera');
-      navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
-        .then(stream => { video.srcObject = stream; })
-        .catch(err => {
-          console.warn('⚠ שגיאה במצלמה:', err);
-          alert("אין גישה למצלמה — בדוק הרשאות.");
-        });
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }});
+        video.srcObject = stream;
+      } catch(e){
+        console.warn("camera error", e);
+        alert("אין גישה למצלמה — בדוק הרשאות.");
+      }
     }
 
-    // ======== Захват фото и сохранение в Supabase ========
     document.getElementById("capture").addEventListener("click", async () => {
       const video = document.getElementById('camera');
       const canvas = document.getElementById('photo');
       const preview = document.getElementById('preview');
-
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
-
-      const dataUrl = canvas.toDataURL('image/png');
-      preview.src = dataUrl;
-      preview.style.display = 'block';
-
-      // Загрузка в Supabase
-      const { error } = await supabase.from('users').update({ photo: dataUrl }).eq('code', savedCode);
-      if (error) console.error('Ошибка при сохранении фото:', error);
+      try {
+        if(!video.videoWidth){ alert("המתן לטעינה של המצלמה"); return; }
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+        const dataUrl = canvas.toDataURL('image/png');
+        preview.src = dataUrl;
+        preview.style.display = 'block';
+        // показать кнопку сохранения
+        document.getElementById("savePostBtn").style.display = 'inline-block';
+      } catch(e){
+        console.error("capture error", e);
+      }
     });
 
-    // ======== Копирование кода ========
-    document.getElementById("copyCodeBtn").addEventListener("click", () => {
-      const codeEl = document.getElementById("generatedCode");
-      navigator.clipboard.writeText(codeEl.innerText)
-        .then(() => alert("הקוד הועתק!"))
-        .catch(err => alert("לא ניתן להעתיק קוד"));
+    // ---------- Save post: upload photo -> create post record ----------
+    document.getElementById("savePostBtn").addEventListener("click", async () => {
+      if(!savedCode || savedCode === "admin"){ alert("רק משתמשים יכולים לפרסם"); return; }
+      const preview = document.getElementById('preview');
+      if(!preview.src){ alert("אין תמונה לשמירה"); return; }
+
+      // запрос описания у пользователя (минимально, чтобы не ломать UI)
+      const desc = prompt("הכנס תיאור קצר לפוסט (או לחץ ביטול):", "") || "";
+
+      try {
+        // 1) загрузка в Storage (bucket photos) — path: <usercode>_<timestamp>.png
+        const blob = await (await fetch(preview.src)).blob();
+        const filename = ${savedCode}_${Date.now()}.png;
+        const uploadPath = filename; // в bucket photos корневой путь
+        const { error: uploadError } = await supabase.storage.from('photos').upload(uploadPath, blob, { upsert: false });
+        if(uploadError){
+          // если файл уже есть — попробуем с upsert=true
+          console.warn("upload error, retry with upsert:", uploadError);
+          const { error: upErr } = await supabase.storage.from('photos').upload(uploadPath, blob, { upsert: true });
+          if(upErr){ throw upErr; }
+        }
+
+        // 2) получить публичный URL
+        const { data: urlData } = supabase.storage.from('photos').getPublicUrl(uploadPath);
+        const publicUrl = urlData && urlData.publicUrl ? urlData.publicUrl : null;
+
+        // 3) создать запись в таблице posts
+        const postId = ${Date.now()}_${Math.random().toString(36).slice(2,9)};
+        const postRecord = {
+          id: postId,
+          usercode: savedCode,
+          name: savedName,
+          photo_url: publicUrl,
+          desc: desc,
+          created_at: new Date().toISOString()
+        };
+        const { error: insertError } = await supabase.from('posts').insert([postRecord]);
+        if(insertError){ console.warn("insert post error:", insertError); alert("שגיאה בשמירת הפוסט"); return; }
+
+        // 4) локально тоже сохраним (как копия)
+        posts.push(postRecord);
+        saveLocal();
+
+        alert("פוסט נשמר בהצלחה!");
+        // очистить preview
+        preview.src = "";
+        preview.style.display = "none";
+        document.getElementById("savePostBtn").style.display = "none";
+        // обновить список постов
+        fetchAndShowPosts();
+
+      } catch(e){
+        console.error("savePost error:", e);
+        alert("שגיאה בעת שמירת הפוסט, בדוק את הקונסול.");
+      }
     });
 
-    // ======== Слушатели ========
-    document.getElementById("registerBtn").addEventListener("click", register);
-    document.getElementById("continueBtn").addEventListener("click", continueToLogin);
-    document.getElementById("loginBtn").addEventListener("click", login);
-    document.getElementById("logoutBtn").addEventListener("click", logout);
+    // ---------- Получить и показать посты (из Supabase, fallback local) ----------
+    async function fetchAndShowPosts(){
+      const container = document.getElementById("postsList");
+      container.innerHTML = "טוען...";
+      try {
+        const { data, error } = await supabase.from('posts').select('*').order('created_at',{ascending:false});
+        let allPosts = [];
+        if(error){ console.warn("supabase posts select error:", error); allPosts = posts.slice().reverse(); }
+        else { allPosts = (data && data.length) ? data.slice().reverse() : posts.slice().reverse(); }
+        renderPosts(container, allPosts);
+      } catch(e){
+        console.error(e);
+        renderPosts(document.getElementById("postsList"), posts.slice().reverse());
+      }
+    }
 
-    console.log("✅ קוד נטען בהצלחה!");
-  </script>
-</body>
-</html>
+    function renderPosts(container, postArray){
+      container.innerHTML = "";
+      if(!postArray || postArray.length===0){ container.innerHTML = "<div class='small'>אין פוסטים להציג</div>"; return; }
+      postArray.forEach(p=>{
+        const div = document.createElement('div');
+        div.className = 'post-row';
+        div.style.padding = '8px';
+        div.style.borderBottom = '1px solid #eee';
+        div.innerHTML = `
+          <div class="meta">
+            <strong>${p.name || 'משתמש'}</strong><br>
+            <span class="small">${p.desc || ''}</span><br>
+            <span class="small">${p.created_at ? new Date(p.created_at).toLocaleString() : ''}</span>
+          </div>
+          ${p.photo_url ? <img src="${p.photo_url}" alt="photo" /> : ''}
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    // ---------- Админ: список пользователей (берём из Supabase если можно) ----------
+    async function renderUsersList(){
+      const c = document.getElementById("usersList");
+      c.innerHTML = "טוען...";
+      try {
+        const { data, error } = await supabase.from('users').select('*').order('id',{ascending:true});
+        let userArray = [];
+        if(error){ console.warn("supabase users select error:", error); userArray = Object.keys(users).map(k=>({id:k,name:users[k].name})); }
+        else userArray = data && data.length ? data : Object.keys(users).map(k=>({id:k,name:users[k].name}));
+        c.innerHTML = "";
+        if(userArray.length===0){ c.innerHTML = "<div class='small'>אין משתמשים</div>"; return; }
+        userArray.forEach(u=>{
+          const row = document.createElement('div');
+          row.className = 'list-item';
+          row.innerHTML = <div>${u.name} (${u.id})</div><div><button class="deleteBtn">מחק</button></div>;
+          row.querySelector('button').addEventListener('click', ()=> deleteAccount(u.id, u.name, row));
+          c.appendChild(row);
+        });
+      } catch(e){
+        console.error(e);
+        c.innerHTML = "<div class='small'>שגיאה בטעינת משתמשים</div>";
+      }
+    }
+
+    // ---------- Админ: список постов ----------
+    async function renderAdminPosts(){
+      const c = document.getElementById("adminPostsList");
+      c.innerHTML = "טוען...";
+      try {
+        const { data, error } = await supabase.from('posts').select('*').order('created_at',{ascending:false});
+        if(error){ console.warn("supabase posts select error:", error); c.innerHTML = "<div class='small'>שגיאה בטעינת פוסטים</div>"; return; }
+        if(!data || data.length===0){ c.innerHTML = "<div class='small'>אין פוסטים</div>"; return; }
+        c.innerHTML = "";
+        data.forEach(p=>{
+          const row = document.createElement('div');
+          row.className = 'post-row';
+          row.style.padding = '8px';
+          row.style.borderBottom = '1px solid #eee';
+          row.innerHTML = `
+            ${p.photo_url ? <img src="${p.photo_url}" alt="photo"/> : ''}
+            <div class="meta" style="display:inline-block; margin-right:8px; text-align:right;">
+              <strong>${p.name || 'משתמש'}</strong><br>
+              <span class="small">${p.desc || ''}</span><br>
+              <span class="small">${p.created_at ? new Date(p.created_at).toLocaleString():''}</span>
+            </div>
+            <div style="display:inline-block; margin-left:10px;"><button class="deleteBtn">מחק</button></div>
+          `;
+          row.querySelector('button').addEventListener('click', ()=> deletePostById(p.id, row, p.photo_url));
+          c.appendChild(row);
+        });
+      } catch(e){
+        console.error(e);
+        c.innerHTML = "<div class='small'>שגיאה בטעינת פוסטים</div>";
+      }
+    }
+
+    // ---------- Удаление поста (админ) ----------
+    async function deletePostById(postId, elementNode, photoUrl){
+      if(!confirm("למחוק פוסט זה?")) return;
+      try {
+        // удалить запись из таблицы posts
+        const { error: delErr } = await supabase.from('posts').delete().eq('id', postId);
+        if(delErr){ console.warn("supabase delete post error:", delErr); alert("שגיאה במחיקה"); return; }
+
+        // удалить файл из storage если есть
+        if(photoUrl){
+          const path = extractPathFromPublicUrl(photoUrl);
+          if(path){
+            const { error: rmErr } = await supabase.storage.from('photos').remove([path]);
+            if(rmErr) console.warn("Ошибка удаления файла storage:", rmErr);
+          }
+        }
+
+        // удалить локальную копию (если есть)
+        posts = posts.filter(p => p.id !== postId);
+        saveLocal();
+
+        if(elementNode && elementNode.remove) elementNode.remove();
+        alert("הפוסט נמחק בהצלחה!");
+        // обновить основной список
+        fetchAndShowPosts();
+      } catch(e){
+        console.error(e); alert("שגיאה במחיקה — בדוק קונסול");
+      }
+    }
+
+    // ---------- Удаление аккаунта (админ) ----------
+    async function deleteAccount(userCode, userName, rowNode){
+      if(!confirm(למחוק את המשתמש ${userName} וכל פוסטים שלו?)) return;
+      try {
+        // 1) получить все посты этого пользователя
+        const { data: userPosts, error: pErr } = await supabase.from('posts').select('*').eq('usercode', userCode);
+        if(pErr){ console.warn("supabase select posts error for user:", pErr); }
+
+        if(userPosts && userPosts.length){
+          // удалить файлы по каждому посту
+          for(const p of userPosts){
+            if(p.photo_url){
+              const path = extractPathFromPublicUrl(p.photo_url);
+              if(path){
+                const { error: rmErr } = await supabase.storage.from('photos').remove([path]);
+                if(rmErr) console.warn("Ошибка удаления файла:", rmErr);
+              }
+            }
+          }
+          // удалить записи posts
+          const { error: delPostsErr } = await supabase.from('posts').delete().eq('usercode', userCode);
+          if(delPostsErr) console.warn("Ошибка удаления записей posts:", delPostsErr);
+        }
+
+        // удалить запись пользователя в таблице users
+        const { error: delUserErr } = await supabase.from('users').delete().eq('id', userCode);
+        if(delUserErr) console.warn("Ошибка удаления пользователя supabase:", delUserErr);
+
+        // удалить локально
+        delete users[userCode];
+        posts = posts.filter(p => p.usercode !== userCode);
+        saveLocal();
+
+        if(rowNode && rowNode.remove) rowNode.remove();
+        alert(המשתמש ${userName} נמחק בהצלחה!);
+        // обновить списки
+        renderUsersList();
+        renderAdminPosts();
+        fetchAndShowPosts();
+      } catch(e){
+        console.error(e);
+        alert("שגיאה במחיקת המשתמש — בדוק קונסול");
+      }
+    }
+
+    // ---------- Удалить всё (админ) ----------
+    document.getElementById("clearAllBtn").addEventListener("click", async () => {
+      if(!confirm("למחוק את כל הפוסטים מכל המשתמשים?")) return;
+      try {
+        // получить все посты
+        const { data: allPosts, error } = await supabase.from('posts').select('*');
+        if(error){ console.warn("error fetching posts:", error); alert("שגיאה בטעינת הפוסטים"); return; }
+        // удалить все файлы
+        for
